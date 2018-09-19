@@ -4,6 +4,17 @@
 // Copyright (c) 2014-2017 Coin Sciences Ltd
 // MultiChain code distributed under the GPLv3 license, see COPYING file.
 
+// Copyright (c) 2017-2018 Hdac Technology AG
+// Hdac code distributed under the GPLv3 license, see COPYING file.
+//============================================================================================
+// History
+//
+// 2018/07/02   GetQuantumRandomBytes(): EYL QRNG(Quantum Random Number Generator) support
+//============================================================================================
+
+
+#include "cust/custhdac.h"
+
 #include "utils/random.h"
 
 #include "crypto/sha512.h"
@@ -20,6 +31,8 @@
 
 #ifndef WIN32
 #include <sys/time.h>
+#else
+#undef FEATURE_HDAC_QUANTUM_RANDOM_NUMBER	// WIN32 not support
 #endif
 
 #include <openssl/crypto.h>
@@ -123,7 +136,15 @@ static void GetOSRand(unsigned char *ent32)
 #endif
 }
 
-void GetRandBytes(unsigned char* buf, int num)
+void memory_cleanse(void *ptr, size_t len)
+{
+    OPENSSL_cleanse(ptr, len);
+}
+
+
+#ifdef FEATURE_HDAC_QUANTUM_RANDOM_NUMBER
+
+void GetRandBytes_org(unsigned char* buf, int num)
 {
     if (RAND_bytes(buf, num) != 1) {
         RandFailure();        
@@ -132,9 +153,120 @@ void GetRandBytes(unsigned char* buf, int num)
     }
 }
 
-void memory_cleanse(void *ptr, size_t len)
+
+void GetStrongRandBytes_org(unsigned char* out, int num)
 {
-    OPENSSL_cleanse(ptr, len);
+    assert(num <= 32);
+    CSHA512 hasher;
+    unsigned char buf[64];
+
+    // First source: OpenSSL's RNG
+    RandAddSeedPerfmon();
+    GetRandBytes(buf, 32);
+    hasher.Write(buf, 32);
+
+    // Second source: OS RNG
+    GetOSRand(buf);
+    hasher.Write(buf, 32);
+
+    // Produce output
+    hasher.Finalize(buf);
+    memcpy(out, buf, num);
+    memory_cleanse(buf, 64);
+}
+
+
+#define QRNG_DEVICE0	"/dev/qrng_u3_0"
+#define QRNG_DEVICE1	"/dev/qrng_u3_1"
+
+static	int	_QRNG_fd = -1;
+
+
+//
+// EYL QRNG support function
+// Two QRNG device support
+//
+void QRNG_RAND_bytes(unsigned char* out, int num)
+{
+    static time_t lasttime = 0;
+
+    if (_QRNG_fd == -1)
+        _QRNG_fd = open(QRNG_DEVICE0, O_RDONLY);
+    if (_QRNG_fd == -1)
+        _QRNG_fd = open(QRNG_DEVICE1, O_RDONLY);
+    if (fDebug>3)LogPrintf("%s: QRNG fd=%d\n", __func__, _QRNG_fd);
+
+    if (_QRNG_fd == -1)		// QRNG is not available
+    {
+        GetRandBytes_org(out, num);
+        return;
+    }
+    if (time(NULL) - lasttime > 3600)
+    	LogPrintf("%s: QRNG(Quantum Random Number Generator) endbaled and replaces RAND_bytes().\n", __func__);
+    lasttime = time(NULL);
+
+    int nread = read(_QRNG_fd, out, num);
+    if (fDebug>3)LogPrintf("%s: QRNG read=%d\n", __func__, nread);
+
+    if (nread != num)	// read failed
+    {
+        _QRNG_fd = -1;
+        GetRandBytes_org(out, num);
+    }
+}
+
+void GetRandBytes(unsigned char* buf, int num)
+{
+    QRNG_RAND_bytes(buf, num);
+}
+
+//
+// EYL QRNG support function
+// Two QRNG device support
+//
+void QRNG_GetStrongRandBytes(unsigned char* out, int num)
+{
+    static time_t lasttime = 0;
+
+    if (_QRNG_fd == -1)
+        _QRNG_fd = open(QRNG_DEVICE0, O_RDONLY);
+    if (_QRNG_fd == -1)
+        _QRNG_fd = open(QRNG_DEVICE1, O_RDONLY);
+    if (fDebug>3)LogPrintf("%s: QRNG fd=%d\n", __func__, _QRNG_fd);
+
+    if (_QRNG_fd == -1)		// QRNG is not available
+    {
+        GetStrongRandBytes_org(out, num);
+        return;
+    }
+    if (time(NULL) - lasttime > 3600)
+    	LogPrintf("%s: QRNG(Quantum Random Number Generator) endbaled and replaces GetStrongRandBytes().\n", __func__);
+    lasttime = time(NULL);
+
+    int nread = read(_QRNG_fd, out, num);
+    if (fDebug>3)LogPrintf("%s: QRNG read=%d\n", __func__, nread);
+
+    if (nread != num)	// read failed
+    {
+        _QRNG_fd = -1;
+        GetStrongRandBytes_org(out, num);
+    }
+}
+
+void GetStrongRandBytes(unsigned char* out, int num)
+{
+    QRNG_GetStrongRandBytes(out, num);
+}
+
+#else	// FEATURE_HDAC_QUANTUM_RANDOM_NUMBER
+
+void GetRandBytes(unsigned char* buf, int num)
+{
+    if (RAND_bytes(buf, num) != 1) {
+        RandFailure();        
+//      if(fDebug>0)LogPrintf("%s: OpenSSL RAND_bytes() failed with error: %s\n", __func__, ERR_error_string(ERR_get_error(), NULL));
+//      assert(false);
+    }
 }
 
 void GetStrongRandBytes(unsigned char* out, int num)
@@ -157,6 +289,8 @@ void GetStrongRandBytes(unsigned char* out, int num)
     memcpy(out, buf, num);
     memory_cleanse(buf, 64);
 }
+
+#endif	// FEATURE_HDAC_QUANTUM_RANDOM_NUMBER
 
 
 uint64_t GetRand(uint64_t nMax)

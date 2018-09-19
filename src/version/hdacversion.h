@@ -21,11 +21,11 @@
 #endif
 
 #define HDAC_BUILD_MAJOR	0
-#define HDAC_BUILD_MINOR	91
+#define HDAC_BUILD_MINOR	92
 #define HDAC_BUILD_REVISION	0
-// Build version is major.minor.revision ( 0.91.0 )
+// Build version is major.minor.revision ( 0.92.0 )
 
-#define HDAC_BUILD_DESC_NUMERIC	20000091
+#define HDAC_BUILD_DESC_NUMERIC	20000092
 
 #define HDAC_VERSION_DESC(maj, min, rev) \
 		DO_STRINGIZE(maj) "." DO_STRINGIZE(min) "." DO_STRINGIZE(rev)

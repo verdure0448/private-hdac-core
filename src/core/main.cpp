@@ -4227,10 +4227,10 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     // Check that all transactions are finalized
     if (GetBoolArg("-autoimportaddress", false))
     {
-        extern int AddAddressToWallet(const CTransaction& tx);
+        extern int AddAddressToWallet(const CTransaction& tx, const string funcname);
 
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
-            AddAddressToWallet(tx);
+            AddAddressToWallet(tx, __func__);
     }
 
 #endif        // FEATURE_HDAC_AUTO_IMPORT_ADDRESS
@@ -4367,10 +4367,10 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
     // Check that all transactions are finalized
     if (GetBoolArg("-autoimportaddress", false))
     {
-        extern int AddAddressToWallet(const CTransaction& tx);
+        extern int AddAddressToWallet(const CTransaction& tx, const string funcname);
 
         BOOST_FOREACH(const CTransaction& tx, (*pblock).vtx)
-            AddAddressToWallet(tx);
+            AddAddressToWallet(tx, __func__);
     }
 
 #endif        // FEATURE_HDAC_AUTO_IMPORT_ADDRESS

@@ -63,6 +63,8 @@
 #define FEATURE_HDAC_DISABLE_EPOW	// Disabled in private blockchain
 #endif
 
+#define FEATURE_HDAC_QUANTUM_RANDOM_NUMBER
+
 
 #endif	// __CUST_HDAC_H_ 
 

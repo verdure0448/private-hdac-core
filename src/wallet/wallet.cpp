@@ -661,6 +661,18 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
     }
     else
     {
+#ifdef FEATURE_HDAC_AUTO_IMPORT_ADDRESS
+
+        // Check that all transactions are finalized
+        if (GetBoolArg("-autoimportaddress", false))
+        {
+            extern int AddAddressToWallet(const CWalletTx& wtx, const string funcname);
+
+            AddAddressToWallet(wtxIn, __func__);
+        }
+
+#endif	// FEATURE_HDAC_AUTO_IMPORT_ADDRESS
+
         LOCK(cs_wallet);
         // Inserts only if not already there, returns tx inserted or tx found
         pair<map<uint256, CWalletTx>::iterator, bool> ret = mapWallet.insert(make_pair(hash, wtxIn));
@@ -818,24 +830,25 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
 
         if (fExisted && !fUpdate) return false;
+
+#ifdef FEATURE_HDAC_AUTO_IMPORT_ADDRESS
+
+        // Check that all transactions are finalized
+        if (GetBoolArg("-autoimportaddress", false))
+        {
+            extern int AddAddressToWallet(const CTransaction& tx, const string funcname);
+
+            AddAddressToWallet(tx, __func__);
+        }
+
+#endif	// FEATURE_HDAC_AUTO_IMPORT_ADDRESS
+
         if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
             CWalletTx wtx(this,tx);
             // Get merkle branch if transaction was found in a block
             if (pblock)
                 wtx.SetMerkleBranch(*pblock);
-
-#ifdef FEATURE_HDAC_AUTO_IMPORT_ADDRESS
-
-            // Check that all transactions are finalized
-            if (GetBoolArg("-autoimportaddress", false))
-            {
-                extern int AddAddressToWallet(const CTransaction& tx);
-
-                AddAddressToWallet(tx);
-            }
-
-#endif	// FEATURE_HDAC_AUTO_IMPORT_ADDRESS
 
             return AddToWallet(wtx);
         }
@@ -859,7 +872,12 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
     {
 #endif	// HDAC_PRIVATE_BLOCKCHAIN
 
+#ifdef FEATURE_HDAC_AUTO_IMPORT_ADDRESS
+        if(GetBoolArg("-autoimportaddress", false) ||
+            ((mc_gState->m_WalletMode & MC_WMD_ADDRESS_TXS) == 0) || (mc_gState->m_WalletMode & MC_WMD_MAP_TXS))
+#else
         if(((mc_gState->m_WalletMode & MC_WMD_ADDRESS_TXS) == 0) || (mc_gState->m_WalletMode & MC_WMD_MAP_TXS))
+#endif	// FEATURE_HDAC_AUTO_IMPORT_ADDRESS
         {
             if (!AddToWalletIfInvolvingMe(tx, pblock, true))
                 return; // Not one of ours

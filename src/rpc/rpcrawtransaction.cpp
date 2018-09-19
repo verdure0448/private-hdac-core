@@ -97,7 +97,7 @@ bool	IsAddressExistInWallet(string addr)
 	}
 	else if (latest[nn] == addr)	// found
 	{
-	    if(fDebug>4)LogPrint("import", "	Address %s found. skip...\n", addr.c_str());
+	    if(fDebug>3)LogPrint("import", "	Address %s found. skip...\n", addr.c_str());
 	    return true;
 	}
     }
@@ -112,12 +112,12 @@ bool	IsAddressExistInWallet(string addr)
 
 
 // AcceptToMemPool() 트랜잭션이 들어오면, 주소와 값 모두 출력..
-int	AddAddressToWallet(const CTransaction& tx)
+int	AddAddressToWallet(const CTransaction& tx, const string funcname)
 {
     int	naddr = 0;
     bool ismining = 0;
 
-    if (fDebug>2)LogPrint("import", "AddAddressToWallet()\n");
+    if (fDebug>2)LogPrint("import", "AddAddressToWallet(tx, %s)\n", funcname);
 
     Array vin;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
@@ -138,7 +138,63 @@ int	AddAddressToWallet(const CTransaction& tx)
     {
         const CTxOut& txout = tx.vout[i];
         Object out;
-        if (fDebug>1 || ismining)LogPrint("import", "	OUT: vout[%d] value=%.8lf\n", i, (double)(txout.nValue)/(double)COIN);
+        if (fDebug>1 || ismining)LogPrint("import", "	txOUT: vout[%d] value=%.8lf\n", i, (double)(txout.nValue)/(double)COIN);
+
+    	txnouttype type;
+    	vector<CTxDestination> addresses;
+	int nRequired = 0;
+	if (!ExtractDestinations(txout.scriptPubKey, type, addresses, nRequired)) {
+		continue;
+	}
+	Array a;
+	BOOST_FOREACH(const CTxDestination& addr, addresses)
+	{
+		if (fDebug>1 || ismining)LogPrint("import", "	OUT: address=%s\n", CBitcoinAddress(addr).ToString().c_str());
+		if (GetBoolArg("-autoimportaddress", false) && !IsAddressExistInWallet(CBitcoinAddress(addr).ToString()))
+		{
+			Array params(3);
+			params[0] = CBitcoinAddress(addr).ToString();
+			params[1] = "";
+			params[2] = false;
+
+			Value ret = importaddress(params, false);
+			if (ret == Value::null)
+				if (fDebug>1 || ismining)LogPrintf("Auto import address: %s\n", CBitcoinAddress(addr).ToString().c_str());
+		}
+	}
+    }
+    return naddr;
+}
+
+
+// AcceptToMemPool() 트랜잭션이 들어오면, 주소와 값 모두 출력..
+int	AddAddressToWallet(const CWalletTx& wtx, const string funcname)
+{
+    int	naddr = 0;
+    bool ismining = 0;
+
+    if (fDebug>2)LogPrint("import", "AddAddressToWallet(wtx, %s)\n", funcname);
+
+    Array vin;
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        Object in;
+        if (wtx.IsCoinBase())
+	{
+            if (fDebug>1)LogPrint("import", "	IN: coinbase=%s\n", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()).c_str());
+	    ismining = 1;
+	}
+        else {
+            if (fDebug>1)LogPrint("import", "	IN: txid=%s\n", txin.prevout.hash.GetHex().c_str());
+        }
+    }
+
+    Array vout;
+    for (unsigned int i = 0; i < wtx.vout.size(); i++)
+    {
+        const CTxOut& txout = wtx.vout[i];
+        Object out;
+        if (fDebug>1 || ismining)LogPrint("import", "	wtxOUT: vout[%d] value=%.8lf\n", i, (double)(txout.nValue)/(double)COIN);
 
     	txnouttype type;
     	vector<CTxDestination> addresses;

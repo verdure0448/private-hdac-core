@@ -4,8 +4,19 @@
 // Copyright (c) 2014-2017 Coin Sciences Ltd
 // MultiChain code distributed under the GPLv3 license, see COPYING file.
 
+// Copyright (c) 2017-2018 Hdac Technology AG
+// Hdac code distributed under the GPLv3 license, see COPYING file.
+//============================================================================================
+// History
+//
+// 2018/07/02   GetQuantumRandomBytes(): EYL QRNG(Quantum Random Number Generator) support
+//============================================================================================
+
+
 #ifndef BITCOIN_RANDOM_H
 #define BITCOIN_RANDOM_H
+
+#include "cust/custhdac.h"
 
 #include "structs/uint256.h"
 
@@ -24,6 +35,13 @@ void GetRandBytes(unsigned char* buf, int num);
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash();
+
+#ifdef FEATURE_HDAC_QUANTUM_RANDOM_NUMBER
+
+// EYL QRNG(Quantum Random Number Generator) support
+void GetQuantumRandomBytes(unsigned char* buf, int num);
+
+#endif	// FEATURE_HDAC_QUANTUM_RANDOM_NUMBER
 
 /**
  * Function to gather random data from multiple sources, failing whenever any

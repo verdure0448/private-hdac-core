@@ -2,6 +2,10 @@
 PRIVATE BLOCKCHAIN HISTORY
 
 
+hdac-0.92: 18.7.2
+
+	EYL QRNG(Quantum Random Number Generator) support (max 2 devices)
+
 hdac-0.91: 18.6.21
 
 	-debug=api -debug=2: LogPrint("api" 출력 가능하도록 원상 복구 

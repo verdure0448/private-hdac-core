@@ -1913,8 +1913,8 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
 #ifdef FEATURE_HDAC_AUTO_IMPORT_ADDRESS
 
-    extern int AddAddressToWallet(const CTransaction& tx);
-    AddAddressToWallet(tx);
+    extern int AddAddressToWallet(const CTransaction& tx, const string funcname);
+    AddAddressToWallet(tx, __func__);
 
 #endif	// FEATURE_HDAC_AUTO_IMPORT_ADDRESS
 
