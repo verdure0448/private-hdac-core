@@ -1,0 +1,10 @@
+version='0.92.1'
+
+a=( ${version//./ } )                   # replace points, split into array
+
+major=${a[0]}
+minor=${a[1]}
+patch=${a[2]}
+
+dirRoot=hdac-private-${version}
+uploadFile=hdac-private-${version}-linux64.tar.gz

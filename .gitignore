@@ -1,3 +1,4 @@
+depends/work/
 
 src/chain/\.deps/
 
@@ -136,3 +137,5 @@ depends/sources/
 depends/built/
 
 depends/x86_64-unknown-linux-gnu/
+
+src/secp256k1/build-aux/depcomp
