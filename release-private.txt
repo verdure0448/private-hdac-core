@@ -1,0 +1,97 @@
+========================================
+PRIVATE BLOCKCHAIN HISTORY
+
+
+hdac-0.91: 18.6.21
+
+	-debug=api -debug=2: LogPrint("api" 출력 가능하도록 원상 복구 
+
+hdac-0.90: 18.6.20
+
+	Tx ordering problem: comment following line (miner/miner.cpp)
+	//#undef HDAC_PRIVATE_BLOCKCHAIN
+
+hdac-0.88: 18.6.19
+
+	Permission problem fixed (permission.cpp)
+	Log message added: reason added at hdactx.cpp
+	
+hdac-0.87: 18.6.18 (public sync)
+
+	fixed LOCK problem ( critical section range ) - ProcessNewBlock()
+	fixed encryptwallet ( issue of block sync. )
+
+hdac-0.85: 18.6.10
+
+	getaddresses의 2번째 파라미터 타입 변경 (int or str)
+
+hdac-0.83: 18.6.7
+	
+	hdactx.cpp에 AddAddressToWallet() 추가
+	rescan시 출력 내용 변경
+
+hdac-0.82: 18.05.25
+
+	main.cpp에 AddAddressToWallet() 추가
+	rpcmining.cpp에서 2016 ==> Params().Interval()로 수정
+
+hdac-0.81: 18.05.17
+
+	Public 1.04.0 수정 버전 반영 
+
+hdac-0.78: 18.05.15
+	
+	getaddresses [ true/false addr_type ] 추가 (addr_type: 0=all 1=local 2=remote)
+
+hdac-0.77: 18.05.11
+	
+	banned permission 추가 (public 추가된 내용)
+
+hdac-0.76: 18.04.27
+	
+	Private에서 ePoW disable: ePoW 필요 없음 (FEATURE_HDAC_DISABLE_EPOW)
+
+hdac-0.75: 18.04.26
+	
+	Public 버전에서 누락된 내용 보완 (FEATURE_PRIVATE_BLOCKCHAIN)
+
+hdac-0.73: 18.04.20
+	
+	hdac-pub-1.01 버전에 맞춰 Private 수정 사항 반영된 버전
+
+hdac-0.40: 18.04.13
+	
+	RPC cmd 중 transaction 들어가는 명령을 tx로도 사용 가능하게 수정
+	gettransaction ==> gettx ...
+
+hdac-0.38: 18.03.25
+	
+	-rescan 시 -autoimportaddress 추가로 지정하면 모든 주소 wallet에 주가함 
+
+hdac-0.37: 18.03.21
+	
+	MAX_BLOCK_SIZE를 1MB에서 8MB로 변경 (tx size 개수가 9950개로 고정 ==> 37100개로 증가함)
+	Auto import시 최근 import한 주소는 다시 추가하지 않음 
+
+hdac-0.36: 18.03.19
+
+	-autoimportaddress 기능 추가 (자동으로 모든 tx의 주소를 wallet에 추가)(FEATURE_HDAC_AUTO_IMPORT_ADDRESS)
+
+hdac-0.35: 18.03.09
+
+	채굴 퍼미션 무시: MCP_ANYONE_CAN_MINE=1로 하면 됨 (단, 메인넷에 접속은 안됨)
+	퍼미션 기능 추가 (35_PERM.add): GETSTATUS, CONTROL, EXECUTE ==> IoT Contract & Device control
+	(FEATURE_HDAC_EXTENDED_PERMISSIONS)
+
+Lyra-dev0.22: DC 버전 18.01.20
+
+hdac-0.32m: NOMP 마이닝 기능 추가됨
+
+hdac-0.32: first-block-reward-div 설정 추가
+	(16.8억DAC = 28000 * 60000 = 58일)
+	(16.8억DAC = 16800 * 100000 = 35일)
+
+hdac-0.31-xlyra.tar.gz: Lyra2, ePoW 중단시킨 버전 (LJM-TEST 단어로 검색 가능)
+
+hdac-0.31: comment 처리 및 소스 코드 일부 정리 
+

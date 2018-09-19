@@ -1,0 +1,123 @@
+//20160615
+fixed LOCK problem ( critical section range ) - ProcessNewBlock()
+
+//20180608
+fixed encryptwallet ( issue of block sync. )
+
+//2018-05-16
+1. release version - 1.04.0
+2. added subtractfeefromamount option (RPC send/sendtoaddress)
+3. added log level (runtime parameter "debug")
+
+//2018-05-10
+1. release version - 1.03.5
+2. Ban address 일부 기능 수정
+
+//2018-05-03
+1. release version - 1.03.0
+2. Ban address 기능 추가
+
+//2018-04-20
+1. release version - 1.02.0
+2. description 내용 삭제 및 일부 help message 수정
+3. build script 수정
+
+//2018-04-03
+1. release version - 1.01.0
+2. TX의 permission script 유효성 검증 시 import된 address는 제외.
+
+//2018-04-03
+1. release version - 1.00.0
+2. getinfo 표시내용 변경
+  - block 동기화 진행율 표시
+  - peer node의 block height중 max값 표시
+  - wallet version및 db version 제거
+3. account 관련 RPC 실행 시 에러 문구 수정
+4. getchainblockheight RPC 추가
+5. txindex 기본값 false
+6. getaddressbalance minconf 옵션 처리 (0일때만 zero confirm 조회)
+7. native currency MAX 값 수정 ( 2억5천 --> 100억 )
+
+//2018-03-30
+1. release version - 0.58.0
+2. address 추출 및 자동 import 기능 추가 및 속도 개선
+3. estimateFee 산출 기준 변경
+4. Balance 및 transaction 조회 시 watchonly address 포함여부 조건 변경
+5. listblock RPC 표시내용 변경
+
+
+//2018-03-20
+1. release verion - 0.57.1
+2. params.dat hash 변경기능 추가
+  - MCP_ANYONE_CAN_ADMIN 을 1로 hard coding 내용 삭제
+  - anyone-can-mine true 로 변경              ( params.dat 수정필요 )
+  - HDAC Protocol version 20000 으로 수정     ( params.dat 수정필요 )
+  - maxstdtxsize 사이즈 4194304 (4M) 로 수정  ( params.dat 수정필요 )
+3. Block Max size 에 관련된 bug fix
+4. getinfo RPC 커맨드 표시 내용 일부 삭제
+5. RPC connection thread 오류 수정
+6. getmempoolinfo RPC 커맨드에 orphan TX 표시
+7. insane fee limit 제거
+8. protocol upgrade 관련 코드 삭제
+9. MAC 용 빌드 스크립트 추가 및 빌드 오류 수정
+10. settxfee 설정 시 0 입력이 가능하도록 수정
+
+
+//2018-03-16
+1. release versio - 0.56.0
+
+2. support rpc command -- "prioritisetransaction"
+  - 특정 TXID 의 priority delta 값을 변경할 수 있다. 
+  - 실제 Fee 계산에 이용되지 않고 priority 조정에만 사용됨
+
+3. Sort TXID according to Fee priority when creating block
+  - Block 이 생성될 때 Fee기준으로 우선순위 배열
+
+4. processing orphan TX ( Tx with unconfirmed coins )
+  - orphan TX가 block 에 포함될 수 있도록 함.
+
+5. rpcthread default value 4 --> 100
+6. txconfirmtarget default value 1 --> 6
+
+7. settxfee rpc command --> applied mempool processing
+  - settxfee 커맨드로 지정된 fee가 TX fee로 적용되도록 함.
+  - 적용단위를 satoshi 에서 HDAC 단위로 변경.
+  - 기존 1000000 으로 입력했다면 0.01 로 입력해야함.
+
+8. fix bug (runtime parameter "minrelaytxfee")
+  - daemon 실행 시 임의로 설정한 값으로 적용되지 못하는 문제.
+
+9. in debug mode, remove dump function.
+  - wallet/txs.dmp 파일이 생성되지 않도록 함. ( 불필요한 사이즈 소모 )
+
+//2018-03-07
+1. release version - 0.55.0
+2. not allowed free Fee Transaction ( 0 Fee 전송 )
+3. not allow fees below the minimum relay Fee
+
+
+// 2018-03-05
+1. release version - 0.54.0
+2. getBalance RPC 호출시 page fault 현상 수정 ( MPOS 동작중 )
+
+
+
+// 2018-02-28
+1. release version - 0.53.0
+
+2. Optimization Unspent List 기능 삭제
+   - Mining 이후 UTXO 50개를 자동으로 combine하면서 TXFee를 소모하는 현상
+   - runtime parameters help string 제거
+     (autocombineminconf, autocombinemininputs, autocombinemaxinputs,autocombinedelay)
+
+3. Minimum TX Fee 
+   - size 에 따른 relay fee 기준으로 최소 fee 책정함
+
+4. limitfreerelay runtime 파라미터 미설정으로 AcceptToMemoryPool 에서 에러 발생 부분 삭제
+   - 에러 내용 : "ERROR: AcceptToMemoryPool : free transaction rejected by rate limiter"
+   - MemPool 이 relay되지 못하고 발생 node에서 pending 되어 처리되지 못함.
+   - 에러내용 삭제 및 [Check Debug] 메세지 추가하여 현상 모니터링.
+   - 정상 처리 확인 후 해당 코드 삭제예정.
+
+5. Create permission 버그 수정
+   - multichain 수정사항 반영
