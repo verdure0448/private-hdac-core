@@ -130,3 +130,9 @@ src/leveldb/build_config\.mk
 src/secp256k1/gen_context
 
 src/secp256k1/src/ecmult_static_context\.h
+
+depends/sources/
+
+depends/built/
+
+depends/x86_64-unknown-linux-gnu/
