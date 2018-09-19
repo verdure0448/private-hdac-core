@@ -64,7 +64,9 @@ configure
 
 libtool
 
-Makefile
+/Makefile
+src/Makefile
+
 
 Makefile\.in
 
