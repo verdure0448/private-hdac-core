@@ -10,6 +10,7 @@
 // History
 // 
 // 2018/01/00	Code optimization
+// 2018/07/17	ASM added
 //============================================================================================
 
 
@@ -32,6 +33,7 @@ public:
     int paramIdx;                      //! 0-based idx of param to convert
 };
 
+// string 변환해야 하는 인자만 여기에 명시함 
 static const CRPCConvertParam vRPCConvertParams[] =
 {
     { "stop", 0 },
@@ -253,6 +255,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listtransactions", 3 },
     { "listaccounts", 0 },
     { "listaccounts", 1 },
+//  { "asm", 1 },	// 숫자로 변경이 필요한 경우 사용 
     { "walletpassphrase", 1 },
     { "getblocktemplate", 0 },
     { "listsinceblock", 1 },

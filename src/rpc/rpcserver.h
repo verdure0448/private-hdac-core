@@ -168,6 +168,7 @@ extern void EnsureWalletIsUnlocked();
 
 extern json_spirit::Value help(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value stop(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value asmcmd(const json_spirit::Array& params, bool fHelp);
 
 
 extern json_spirit::Value getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp

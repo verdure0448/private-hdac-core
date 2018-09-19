@@ -2,6 +2,38 @@
 PRIVATE BLOCKCHAIN HISTORY
 
 
+hdac-1.01: 18.8.21
+
+	Wallet memory leck update
+	Some miner code changes
+
+hdac-1.00: 18.7.31
+
+	Hdac public 1.05.00 compatible 
+
+hdac-0.96: 18.7.26
+	
+	ASM feature FEATURE_HDAC_KASSE_ASM added for public blockchain compatibility
+
+hdac-0.95: 18.7.20
+
+	ASM enable configuration added
+	    - kasse-asm=true (params.dat)
+
+hdac-0.94: 18.7.19
+
+	ASM key hash authentication added (blockchain root stream.ASM)
+
+hdac-0.93: 18.7.18
+
+	ASM detection function asmcmd() added
+	ASM command added
+	    - asm off : disables ASM
+	    - asm disable : disables ASM
+	    - asm PASSWORD add : Add new ASM key hash
+	    - asm PASSWORD remove : Remove ASM key hash
+	    - asm PASSWORD SECORDS : enables ASM for SECONDS
+
 hdac-0.92: 18.7.2
 
 	EYL QRNG(Quantum Random Number Generator) support (max 2 devices)

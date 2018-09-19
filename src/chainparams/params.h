@@ -8,6 +8,7 @@
 // 
 // 2018/02/00   changed the name of structure
 // 2018/03/19   included custfile
+// 2018/07/20   kasse-asm parameter added. (HDAC_KASSE_ASM variable added)
 //============================================================================================
 
 #ifndef __HDAC_PARAMS_H_
@@ -61,6 +62,7 @@ extern int MCP_MAX_STD_OP_RETURN_COUNT;
 extern int64_t MCP_INITIAL_BLOCK_REWARD;
 extern int64_t MCP_FIRST_BLOCK_REWARD;
 extern int MCP_TARGET_BLOCK_TIME;
+extern int HDAC_KASSE_ASM;			// Hdac LJM 180720
 extern int MCP_ANYONE_CAN_ADMIN;
 extern int MCP_ANYONE_CAN_MINE;
 extern int MCP_ANYONE_CAN_CONNECT;

@@ -67,6 +67,13 @@ int LogPrintStr(const std::string &str);
     {                                                                         \
         LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
         return false;                                                         \
+    }										\
+    /**   Log error status and return false */                                \
+    template<TINYFORMAT_ARGTYPES(n)>							\
+    static inline bool error_status(const char* format, TINYFORMAT_VARARGS(n))		\
+    {											\
+        LogPrintStr("Status: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n");	\
+        return false;									\
     }
 
 TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
@@ -80,9 +87,18 @@ static inline int LogPrint(const char* category, const char* format)
     if(!LogAcceptCategory(category)) return 0;
     return LogPrintStr(format);
 }
+
+
 static inline bool error(const char* format)
 {
     LogPrintStr(std::string("ERROR: ") + format + "\n");
+    return false;
+}
+
+
+static inline bool error_status(const char* format)
+{
+    LogPrintStr(std::string("Status: ") + format + "\n");
     return false;
 }
 

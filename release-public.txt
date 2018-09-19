@@ -1,5 +1,47 @@
-//20160615
-fixed LOCK problem ( critical section range ) - ProcessNewBlock()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# - ver: 1.03.0
+# 20180305 - migrated development version to public version
+----------------
+
+# - ver: 1.03.5
+# 20180428 - The default value of "-txindex" changed true to false
+----------------
+
+# - ver: 1.04.0
+# 20180515 - added log level 0 ~ 5 (runtime parameter "debug")
+# 20180516 - added subtractfeefromamount option (RPC send/sendtoaddress/sendfrom/sendfromaddress)
+# 20180518 - Fixed error in status display of runtime parameter " -gen "
+# 20180524 - fixed GetNetworkHashPS()
+# 20180608 - fixed encryptwallet ( issue of block sync. )
+# 20180615 - fixed LOCK problem ( critical section range ) - ProcessNewBlock()
+
+----------------
+# - ver:1.05.0
+# 20180629 - changed epow node factor's indicator ( coinbase --> signer )
+# 20180710 - epow V2.0
+# 20180710 - changed Difficulty adjustment Algorithm ( per 480 block --> every blcok )
+# 20180720 - optimized parameters for epow and pow
+
+
+===============
+
+
+//20180615
+LOCK problem ( critical section range ) - ProcessNewBlock()
 
 //20180608
 fixed encryptwallet ( issue of block sync. )

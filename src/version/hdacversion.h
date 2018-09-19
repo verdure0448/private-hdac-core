@@ -4,6 +4,8 @@
 // History
 //
 // 2018/02/00   Code optimization
+// 2018/07/20   v0.95 kasse-asm parameter added
+// 2018/07/31	v1.00 Hdac Public Blockchain 1.05.0 compatible
 //============================================================================================
 
 
@@ -20,12 +22,12 @@
 #define DO_STRINGIZE(X)		#X
 #endif
 
-#define HDAC_BUILD_MAJOR	0
-#define HDAC_BUILD_MINOR	92
+#define HDAC_BUILD_MAJOR	1
+#define HDAC_BUILD_MINOR	00
 #define HDAC_BUILD_REVISION	0
-// Build version is major.minor.revision ( 0.92.0 )
+// Build version is major.minor.revision ( 1.00.0 )
 
-#define HDAC_BUILD_DESC_NUMERIC	20000092
+#define HDAC_BUILD_DESC_NUMERIC	20000100
 
 #define HDAC_VERSION_DESC(maj, min, rev) \
 		DO_STRINGIZE(maj) "." DO_STRINGIZE(min) "." DO_STRINGIZE(rev)

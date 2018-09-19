@@ -39,11 +39,13 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+
 static void RandFailure()
 {
     if(fDebug>0)LogPrintf("Failed to read randomness, aborting\n");
     abort();
 }
+
 
 static inline int64_t GetPerformanceCounter()
 {
@@ -58,6 +60,7 @@ static inline int64_t GetPerformanceCounter()
     return nCounter;
 }
 
+
 void RandAddSeed()
 {
     // Seed with CPU performance counter
@@ -65,6 +68,7 @@ void RandAddSeed()
     RAND_add(&nCounter, sizeof(nCounter), 1.5);
     OPENSSL_cleanse((void*)&nCounter, sizeof(nCounter));
 }
+
 
 static void RandAddSeedPerfmon()
 {
@@ -104,6 +108,7 @@ static void RandAddSeedPerfmon()
     }
 #endif
 }
+
 
 /** Get 32 bytes of system entropy. */
 static void GetOSRand(unsigned char *ent32)
@@ -194,19 +199,22 @@ void QRNG_RAND_bytes(unsigned char* out, int num)
         _QRNG_fd = open(QRNG_DEVICE0, O_RDONLY);
     if (_QRNG_fd == -1)
         _QRNG_fd = open(QRNG_DEVICE1, O_RDONLY);
-    if (fDebug>3)LogPrintf("%s: QRNG fd=%d\n", __func__, _QRNG_fd);
+    if (time(NULL) - lasttime > 30)
+    {
+        if (fDebug>4)LogPrintf("%s: QRNG fd=%d\n", __func__, _QRNG_fd);
+    }
 
     if (_QRNG_fd == -1)		// QRNG is not available
     {
         GetRandBytes_org(out, num);
         return;
     }
-    if (time(NULL) - lasttime > 3600)
+    if (time(NULL) - lasttime > 60)
     	LogPrintf("%s: QRNG(Quantum Random Number Generator) endbaled and replaces RAND_bytes().\n", __func__);
     lasttime = time(NULL);
 
     int nread = read(_QRNG_fd, out, num);
-    if (fDebug>3)LogPrintf("%s: QRNG read=%d\n", __func__, nread);
+    if (fDebug>3)LogPrintf("%s: QRNG read bytes=%d\n", __func__, nread);
 
     if (nread != num)	// read failed
     {
@@ -215,10 +223,12 @@ void QRNG_RAND_bytes(unsigned char* out, int num)
     }
 }
 
+
 void GetRandBytes(unsigned char* buf, int num)
 {
     QRNG_RAND_bytes(buf, num);
 }
+
 
 //
 // EYL QRNG support function
@@ -253,6 +263,7 @@ void QRNG_GetStrongRandBytes(unsigned char* out, int num)
     }
 }
 
+
 void GetStrongRandBytes(unsigned char* out, int num)
 {
     QRNG_GetStrongRandBytes(out, num);
@@ -268,6 +279,7 @@ void GetRandBytes(unsigned char* buf, int num)
 //      assert(false);
     }
 }
+
 
 void GetStrongRandBytes(unsigned char* out, int num)
 {
@@ -308,10 +320,12 @@ uint64_t GetRand(uint64_t nMax)
     return (nRand % nMax);
 }
 
+
 int GetRandInt(int nMax)
 {
     return GetRand(nMax);
 }
+
 
 uint256 GetRandHash()
 {
@@ -320,8 +334,10 @@ uint256 GetRandHash()
     return hash;
 }
 
+
 uint32_t insecure_rand_Rz = 11;
 uint32_t insecure_rand_Rw = 11;
+
 void seed_insecure_rand(bool fDeterministic)
 {
     // The seed values have some unlikely fixed points which we avoid.

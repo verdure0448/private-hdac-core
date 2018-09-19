@@ -61,6 +61,7 @@
 
 #ifdef HDAC_PRIVATE_BLOCKCHAIN
 #define FEATURE_HDAC_DISABLE_EPOW	// Disabled in private blockchain
+#define FEATURE_HDAC_KASSE_ASM		// Kasse ASM enabled at Private Blockchain (params.dat sync problem)
 #endif
 
 #define FEATURE_HDAC_QUANTUM_RANDOM_NUMBER

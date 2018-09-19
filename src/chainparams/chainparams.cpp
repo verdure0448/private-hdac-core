@@ -566,6 +566,12 @@ public:
     void SetHdacParams()
     {
         fAllowMinDifficultyBlocks = (mc_gState->m_NetworkParams->GetInt64Param("allowmindifficultyblocks") != 0);
+
+#if 1
+        // [hard fork] expected date2018/08/01 ~ 
+        nStartHeightDiffAlg = 112400;
+        nStartHeightEpowV2 =  112400;
+#endif
     }
 
     void SetHdacRuntimeParams()

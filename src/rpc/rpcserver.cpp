@@ -11,6 +11,16 @@
 //
 // 2018/01/00	Change RPC session management
 // 2018/03/00   Number of rpcthreads changed 4 to 10
+// 2018/07/17	asmcmd() function added (aes.h aes.c added)
+// 2018/07/20   kasse-asm parameter added
+//              ASM verification via root stream (key=ASM)
+//              Added commands:
+//                  asm
+//                  asm off
+//                  asm disable
+//                  asm <PASSWORD> add
+//                  asm <PASSWORD> remove
+//                  asm <PASSWORD> <SECONDS>
 //============================================================================================
 
 
@@ -43,6 +53,8 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio/deadline_timer.hpp>
 
+//#include "aes.h"
+
 
 using namespace boost;
 using namespace boost::asio;
@@ -51,6 +63,7 @@ using namespace std;
 
 using boost::asio::deadline_timer;
 using boost::asio::ip::tcp;
+
 
 static std::string strRPCUserColonPass;
 
@@ -417,12 +430,389 @@ Value stop(const Array& params, bool fHelp)
     return "Hdac server stopping";
 }
 
+
+//
+// ASM device management
+//
+class asmlist {
+private:
+    string keyhash[100];
+    int keyexpire[100];
+    bool keyuse[100];
+    int freeidx;
+    int available_asm;
+
+public:
+    asmlist() { reset(); }
+    ~asmlist() { reset(); }
+
+    void reset()
+    {
+        memset(keyexpire, 0, sizeof(keyexpire));
+        memset(keyuse, 0, sizeof(keyuse));
+        freeidx = -1;
+        available_asm = 0;
+    }
+
+    int set(string hash, bool use)
+    {
+        int ii = 0;
+
+        freeidx = -1;
+        for (ii = 0; ii < 100; ii++)
+        {
+            if (keyhash[ii] == "" && freeidx == -1)
+                freeidx = ii;
+            if (keyhash[ii] == hash)
+            {
+	        LogPrintf("Kasse ASM: ASM updated. use=%d hash=%s\n", use, hash.c_str());
+                keyuse[ii] = use;
+                return ii;
+            }
+        }
+        if (ii >= 100 && freeidx >= 0)
+        {
+	    LogPrintf("Kasse ASM: New ASM added. use=%d hash=%s\n", use, hash.c_str());
+            keyhash[freeidx] = hash;
+            keyuse[freeidx] = use;
+            return freeidx;
+        }
+        return -1;
+    }
+
+    int avail()
+    {
+        int nuse = 0;
+        for (int ii = 0; ii < 100; ii++)
+        {
+            if (keyuse[ii])
+                nuse++;
+        }
+        available_asm = nuse;
+
+        return available_asm;
+    }
+
+    int check(string hash)
+    {
+        for (int ii = 0; ii < 100; ii++)
+        {
+            if (keyhash[ii] == hash && keyuse[ii] == true)
+                return 1;
+        }
+        return 0;
+    }
+};
+
+asmlist _asmmap;
+time_t	_asm_timeout = 0;
+
+
+//
+// asm			 => display remaining seconds
+// asm off / asm disable => disable admin mode
+// asm history
+// asm PASSWORD add	 => Add current ASM module hash
+// asm PASSWORD remove	 => Rmove current ASM module hash
+// asm PASSWORD SECONDS	 => Check ASM validity
+//
+Value asmcmd(const Array& params, bool fHelp)
+{
+    int	add_hash = 0, remove_hash = 0, history = 0;
+    char tmp[200];
+
+
+    // Command: asm 
+    if (params.size() == 0 && _asm_timeout > time(NULL))
+    {
+        sprintf(tmp, "%ld", _asm_timeout - time(NULL));
+	string msg = tmp;
+	return msg;
+    }
+
+    // Command: asm off / asm disable
+    if (params.size() == 1)
+    {
+        string strCmd = params[0].get_str();
+	if (strCmd == "off" || strCmd == "disable")
+	{
+	    _asm_timeout = 0;
+	    LogPrintf("Kasse ASM: disabled!\n");
+            return "ASM disabled";
+	}
+	else if (strCmd == "history")
+	{
+	    history = 1;
+	}
+    }
+
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "asm off\n"
+            "asm disable\n"
+            "asm \"passphrase\" add\n"
+            "asm \"passphrase\" remove\n"
+            "asm \"passphrase\" timeout\n"
+            "\nEnables admin mode for 'timeout' seconds.\n"
+            "Hdac Kasse ASM hardware module required (Not a Kasse hardware wallet)\n"
+            "Hdac Kasse ASM module was developed for Hdac Private Blockchain Admin mode security enhancement\n"
+            "This is needed prior to performing transactions related to private keys such as sending assets\n"
+            "\nArguments:\n"
+            "1. off or diable      (string, required) Disable ASM enabled admin mode\n"
+            "1. \"passphrase\"       (string, required) The ASM key encryption passphrase\n"
+            "2. timeout            (numeric, required) The time to keep the ASM key in seconds.\n"
+            "2. add                (string, required) Add current ASM key from the root stream\n"
+            "2. remove             (string, required) Remove current ASM key from the root stream\n"
+            "\nExamples:\n"
+            "\nunlock the admin mode for 60 seconds\n"
+            + HelpExampleCli("asm", "\"my pass phrase\" 60\n")
+        );
+
+    if (fHelp)
+        return true;
+
+
+    string strDataDir = GetDataDir().string();
+
+    // ASM check request...
+    string reqfile = strDataDir + "/hdac-asm.req";
+    FILE *reqfp = fopen(reqfile.c_str(), "wb");
+    if (reqfp)
+    	fclose(reqfp);
+
+    sleep(4);
+
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    string strPass = params[0].get_str();
+
+    if (strPass.length() <= 0)
+    {
+        throw runtime_error(
+            "asm <passphrase> <timeout>\n"
+            "Enables admin mode for <timeout> seconds.");
+    }
+
+    int nSleepTime = 0;
+    if (params.size() >= 2)
+    {
+	string strCmd = params[1].get_str();
+	if (atoi(strCmd.c_str()) > 0)
+	    nSleepTime = atoi(strCmd.c_str());
+	else 
+	{
+	    string strCmd = params[1].get_str();
+	    if (strCmd == "add")
+	        add_hash = 1;
+	    else if (strCmd == "remove")
+	        remove_hash = 1;
+	}
+    }
+    
+
+    // load key hashes: root ASM 
+    Array list_params(4);
+    list_params[0] = "root";
+    list_params[1] = "ASM";
+    list_params[2] = false;
+    list_params[3] = 100;
+
+    Value asmlist = liststreamkeyitems(list_params, false);
+
+    Array& asms = asmlist.get_array();
+    for (int ii = 0; ii < (int)asms.size(); ii++)
+    {
+        const Object obj = asms[ii].get_obj();
+	const Value& val = find_value(obj, "data");
+	if (val.type() == str_type)
+	{
+	    // 1111hash => use
+	    // 0000hash => not use
+	    string hash = val.get_str();
+	    if (hash.substr(0, 4) == "0000")
+	    {
+		if (history)
+	    	    printf("Removed: %s\n", hash.substr(4).c_str());
+		_asmmap.set(hash.substr(4).c_str(), false);
+	    }
+	    else if (hash.substr(0, 4) == "1111")
+	    {
+		if (history)
+	    	    printf("Added:   %s\n", hash.substr(4).c_str());
+		_asmmap.set(hash.substr(4).c_str(), true);
+	    }
+	}
+    }
+
+    if (history)
+    	return "";
+
+    uint8_t    passwdhash[32] = {0};
+    uint8_t    key256[32] = {0}, keyhash[32] = {0};
+    uint8_t    iv[16] = {0,0,0, 6,6,1,2,2,0, 0xFF, 6,6,1,2,2,0};
+    char       buf[256] = {0};
+    time_t     curtime = 0;
+
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, strPass.c_str(), strPass.length());
+    SHA256_Final(passwdhash, &ctx);
+
+    memcpy(key256, passwdhash, 32);
+    memcpy(iv, strPass.c_str(), strPass.length());
+
+
+    // Load ASM output
+    string infile = strDataDir + "/hdac-asm.out";
+    
+    FILE *infp = fopen(infile.c_str(), "rb");
+    if (infp == NULL)
+    {
+        _asm_timeout = 0;
+        string msg = "ERROR: Cannot open ASM data file " + infile + "\n";
+	LogPrintf("Kasse ASM: %s", msg.c_str());
+        throw runtime_error(msg);
+    }
+
+    uint8_t outbuf[256] = {0};
+    char    id[16] = {0};
+    uint8_t privkey[32] = {0};
+
+    if (fgets(buf, sizeof(buf), infp))
+    {
+        if (buf[strlen(buf)-1] == '\n')
+            buf[strlen(buf)-1] = 0;
+
+        if (fDebug>1)LogPrintf("READ=%s\n", buf);
+
+        int len = strlen(buf);
+        if (len < 128)
+	{
+	    _asm_timeout = 0;
+	    LogPrintf("Kasse ASM: ERROR: ASM data incorrect!\n");
+            throw runtime_error("ERROR: ASM data incorrect!\n");
+	}
+
+	// decryption
+        mc_HexToBin(outbuf, buf, strlen(buf));
+
+        memcpy(&curtime, &outbuf[0], sizeof(curtime));
+        memcpy(id, &outbuf[16], 16);
+        memcpy(privkey, &outbuf[32], 32);
+
+        if (strncmp(id, "Hdac ASM", 8) != 0)
+	{
+	    _asm_timeout = 0;
+	    LogPrintf("Kasse ASM: ERROR: ASM password incorrect!\n");
+            throw runtime_error("ERROR: ASM password incorrect!\n");
+	}
+
+        if (time(NULL) - curtime > 60)
+	{
+	    _asm_timeout = 0;
+	    LogPrintf("Kasse ASM: ERROR: ASM timestamp expired!\n");
+            throw runtime_error("ERROR: ASM timestamp expired!\n");
+	}
+
+        uint8_t tmp[64] = {0}, calckeyhash[32] = {0};
+        memcpy(tmp, privkey, 32);
+
+        SHA256_Init(&ctx);
+        SHA256_Update(&ctx, privkey, 32);
+        SHA256_Final(&tmp[32], &ctx);
+
+        SHA256_Init(&ctx);
+        SHA256_Update(&ctx, tmp, 64);	// hash: privkey(32) + privkey hash(32)
+        SHA256_Final(calckeyhash, &ctx);
+
+        if (fDebug>1)LogPrintf("Kasse ASM: Verification OK! Id=%s: Admin mode enabled for %d seconds\n", id, nSleepTime);
+
+        /*****
+        printf("\nPrivate Key: ");
+        for (int ii = 0; ii < 32; ii++)
+            printf("%02X", privkey[ii]);
+        printf("\n");
+        *****/
+
+	if (nSleepTime > 0)
+	    _asm_timeout = time(NULL) + nSleepTime;
+
+	// Initial setup: publish root ASM HASH
+	if (add_hash || remove_hash)
+	{
+		char    hexstr[100] = {0};
+
+		Array pub_params(3);
+		pub_params[0] = "root";
+		pub_params[1] = "ASM";
+		memset(hexstr, 0, sizeof(hexstr));
+		mc_BinToHex(&hexstr[4], calckeyhash, 32);
+		if (remove_hash)
+		{
+			hexstr[0] = '0';
+			hexstr[1] = '0';
+			hexstr[2] = '0';
+			hexstr[3] = '0';
+			LogPrintf("Kasse ASM: Remove hash %s\n", &hexstr[4]);
+		}
+		else	// add_hash or initial setup
+		{
+			hexstr[0] = '1';
+			hexstr[1] = '1';
+			hexstr[2] = '1';
+			hexstr[3] = '1';
+			LogPrintf("Kasse ASM: Add hash %s\n", &hexstr[4]);
+		}
+		pub_params[2] = hexstr;
+
+		Value ret = publish(pub_params, false);
+		if (ret == Value::null)
+		{
+			LogPrintf("ERRPR: ASM hash registration to the root stream failed!\n");
+			throw runtime_error("ERRPR: ASM hash registration to the root stream failed!\n");
+		}
+		else
+		{
+		    _asmmap.set(&hexstr[4], remove_hash ? false : true);
+		}
+	}
+
+	memset(tmp, 0, sizeof(tmp));
+	mc_BinToHex(tmp, calckeyhash, 32);
+
+	if (!_asmmap.check((char *)tmp))
+	{
+	    _asm_timeout = 0;
+	    LogPrintf("Kasse ASM: ERROR: ASM key hash not matched!\n");
+            throw runtime_error("ERROR: ASM key hash not matched!\n");
+	}
+    }
+
+    fclose(infp);
+
+    bzero(buf, sizeof(buf));
+    if (add_hash)
+        sprintf(buf, "Current ASM key added to the root stream for authentication");
+    else if (remove_hash)
+    {
+	_asm_timeout = 0;
+        sprintf(buf, "Current ASM key removed to the root stream for authentication");
+    }
+    else 
+        sprintf(buf, "ASM enabled for %d seconds", nSleepTime);
+    string msg = buf;
+    LogPrintf("Kasse ASM: %s\n", buf);
+
+    return msg;
+}
+
+
 string AllowedPausedServices()
 {
     string ret="incoming,mining";
 
     return ret;
 }
+
 
 uint32_t GetPausedServices(const char *str)
 {
@@ -1037,9 +1427,30 @@ void JSONRequest::parse(const Value& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
     if (valMethod.type() != str_type)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
+
+    // command name
     strMethod = valMethod.get_str();
     if (strMethod != "getblocktemplate")
         if(fDebug>4)LogPrint("rpc", "ThreadRPCServer method=%s\n", SanitizeString(strMethod));
+
+    // Hdac ASM security mode			// Hdac LJM 180720
+    if (HDAC_KASSE_ASM > 0)
+    {
+        if (_asm_timeout <= 0 || (_asm_timeout - time(NULL)) <= 0)	// restrict command set
+	{
+	    if ((strMethod.substr(0, 3) == "get" && strMethod.substr(0, 6) != "getnew") ||
+	        strMethod.substr(0, 4) == "list" || strMethod.substr(0, 4) == "help" ||
+	        strMethod.substr(0, 3) == "asm" || strMethod.substr(0, 6) == "decode")
+	    {
+	        // Allow read only commands 
+	    }
+	    else
+	    {
+		LogPrintf("Kasse ASM not enabled: %s command rejected!\n", strMethod.c_str());
+	        throw JSONRPCError(RPC_INVALID_REQUEST, "Kasse ASM not enabled! (Use 'asm PASSWORD add' command first)");
+	    }
+	}
+    }
 
     Value valChainName = find_value(request, "chain_name");
     if (valChainName.type() != null_type)
@@ -1217,10 +1628,10 @@ void tcp_session::ServiceConnection(AcceptedConnection *conn)
         		/* HDAC START */
                 bool ret = HTTPReq_JSONRPC(conn, strRequest, mapHeaders, fRun);
                 {
-               	output_deadline_.expires_from_now(boost::posix_time::seconds(DEFAULT_RPC_HTTP_SERVER_TIMEOUT));
-                	output_deadline_.async_wait(
-                    boost::bind(&tcp_session::check_deadline,
-                    this, &output_deadline_));
+               	    output_deadline_.expires_from_now(boost::posix_time::seconds(DEFAULT_RPC_HTTP_SERVER_TIMEOUT));
+                    output_deadline_.async_wait(
+                        boost::bind(&tcp_session::check_deadline,
+                        this, &output_deadline_));
                 }
                 if(!ret)
                 break;
@@ -1270,7 +1681,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 #endif
 
-    #if 0
+#if 0
     if(mc_gState->m_ProtocolVersionToUpgrade > mc_gState->m_NetworkParams->ProtocolVersion())
     {
         if( setAllowedWhenWaitingForUpgrade.count(strMethod) == 0 )
@@ -1278,7 +1689,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
             throw JSONRPCError(RPC_UPGRADE_REQUIRED, strprintf("BlockChain was upgraded to protocol version %d, please upgrade Hdac",mc_gState->m_ProtocolVersionToUpgrade));
         }
     }
-    #endif
+#endif
 
     if(GetBoolArg("-offline",false))
     {
@@ -1403,4 +1814,5 @@ std::set<std::string> setAllowedWhenLimited;
 
 std::vector<CRPCCommand> vStaticRPCCommands;
 std::vector<CRPCCommand> vStaticRPCWalletReadCommands;
+
 

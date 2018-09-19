@@ -7,6 +7,7 @@
 // History
 // 
 // 2018/04/19	Add history 
+// 2018/07/20   kasse-asm parameter added. (HDAC_KASSE_ASM variable added)
 //============================================================================================
 
 #ifndef GLOBALS_H
@@ -38,6 +39,7 @@ int MCP_MAX_STD_OP_RETURN_COUNT=0;
 int64_t MCP_INITIAL_BLOCK_REWARD=0;
 int64_t MCP_FIRST_BLOCK_REWARD=0;
 int MCP_TARGET_BLOCK_TIME=0;
+int HDAC_KASSE_ASM=0;			// Hdac LJM 180720
 int MCP_ANYONE_CAN_ADMIN=0;
 int MCP_ANYONE_CAN_MINE=0;
 int MCP_ANYONE_CAN_CONNECT=0;

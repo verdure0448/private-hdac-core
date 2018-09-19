@@ -716,9 +716,6 @@ bool AppInitAsParams()
 
 bool ParamsRecover(int OutputPipe)
 {
-    size_t bytes_written;
-    char bufOutput[4096];
-
     if(mc_gState->GetSeedNode() != NULL)
     {
       unsigned char paramhash[65];

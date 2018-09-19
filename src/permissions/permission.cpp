@@ -780,7 +780,7 @@ uint32_t mc_Permissions::GetPossiblePermissionTypes(uint32_t entity_type)
 
 uint32_t mc_Permissions::GetPermissionType(const char *str,int entity_type)
 {
-    uint32_t result,perm_type,full_type;
+    uint32_t result,perm_type = 0,full_type;
     char* ptr;
     char* start;
     char* ptrEnd;

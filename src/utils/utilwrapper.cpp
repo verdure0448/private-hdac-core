@@ -9,6 +9,7 @@
 // History
 //
 // 2018/02/00   Code optimization
+// 2018/07/20   kasse-asm parameter added. (HDAC_KASSE_ASM variable added)
 //============================================================================================
 
 
@@ -728,6 +729,7 @@ int mc_HdacParams::SetGlobals()
     MCP_INITIAL_BLOCK_REWARD=mc_gState->m_NetworkParams->GetInt64Param("initialblockreward");
     MCP_FIRST_BLOCK_REWARD=mc_gState->m_NetworkParams->GetInt64Param("firstblockreward");
     MCP_TARGET_BLOCK_TIME=mc_gState->m_NetworkParams->GetInt64Param("targetblocktime");
+    HDAC_KASSE_ASM=mc_gState->m_NetworkParams->GetInt64Param("kasseasm");
     MCP_ANYONE_CAN_ADMIN=mc_gState->m_NetworkParams->GetInt64Param("anyonecanadmin");
     MCP_ANYONE_CAN_MINE=mc_gState->m_NetworkParams->GetInt64Param("anyonecanmine");
     MCP_ANYONE_CAN_CONNECT=mc_gState->m_NetworkParams->GetInt64Param("anyonecanconnect");

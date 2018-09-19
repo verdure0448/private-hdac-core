@@ -4328,37 +4328,35 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
 #ifndef FEATURE_HDAC_DISABLE_EPOW
 
-        /* HDAC START */
         int wz=0, nf=0, bh=0;
         bool fcheckBlockWz = VerifyBlockWindow(*pblock, pfrom);
         GetCurrentBlockWindowInfo(wz, nf, bh);
-        if (!fcheckBlockWz) {
-
-            std::string addrMiner = GetCoinbaseAddress(*pblock);;
-
-            if(setBlacklistBlocks.size())  // HDAC
+        if (!fcheckBlockWz) 
+        {
+            std::string addrMiner = GetBlockMinerAddress(*pblock);
+            
+            if(setBlacklistBlocks.size())
             {
                 if(setBlacklistBlocks.find(addrMiner) != setBlacklistBlocks.end())
                 {
                     return error("%s : listed in check_ePoWRule(%s) FAIL . WZ: %d NF: %d BH: %d", __func__, addrMiner, wz, nf, bh);
                 }
             }
-
+            
             if (!CheckePoWRule(addrMiner, chainActive.Height()))
             {
                 setBlacklistBlocks.insert(addrMiner);
                 return error("%s : check_ePoWRule(%s) FAIL.", __func__, addrMiner);
             }
 
-            return error("%s : VerifyBlockWindow REJECTED. WZ: %d NF: %d BH: %d", __func__, wz, nf, bh);
+            return error_status("%s : Consensus rules (FALSE). WZ: %d NF: %d BH: %d", __func__, wz, nf, bh);
         }
         else
         {
-            //std::string msg = strprintf("New Block received from %s. %s", (pfrom == NULL ? "ME": ">>>"+pfrom->addr.ToString()), pblock->ToString());
-            std::string msg = strprintf("New Block was received from %s. WZ: %d NF: %d BH: %d", (pfrom == NULL ? "ME": "peer-"+pfrom->addr.ToString()), wz, nf, bh);
+            std::string addrMiner2 = GetBlockMinerAddress(*pblock);
+            std::string msg = strprintf("New Block from %s. MINER(%s) WZ: %d NF: %d BH: %d", (pfrom == NULL ? "ME": "peer-"+pfrom->addr.ToString()), addrMiner2, wz, nf, bh);
             if(fDebug>0)LogPrintf("hdac: %s\n", msg);
         }
-        /* HDAC END */
 
 #endif        // FEATURE_HDAC_DISABLE_EPOW
 
@@ -6562,14 +6560,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         CNodeState &state = *State(pto->GetId());
         if (state.fShouldBan) {
-            if (pto->fWhitelisted)
+            if (pto->fWhitelisted) {
                 if(fDebug>3)LogPrintf("Warning: not punishing whitelisted peer %s!\n", pto->addr.ToString());
-            else {
+            } else {
                 pto->fDisconnect = true;
-                if (pto->addr.IsLocal())
+                if (pto->addr.IsLocal()) {
                     if(fDebug>3)LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
-                else
-                {
+		} else {
                     CNode::Ban(pto->addr);
                 }
             }

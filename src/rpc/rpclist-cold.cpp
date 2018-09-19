@@ -28,6 +28,7 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "help",                   &help,                   true,      true,       false },
     { "control",            "stop",                   &stop,                   true,      true,       false },
     { "control",            "getblockchainparams",    &getblockchainparams,    true,      false,      false }, 
+    { "control",            "asm",                    &asmcmd,                 true,      false,      false },
 
     /* Raw transactions */
     { "rawtransactions",    "decodescript",           &decodescript,           true,      false,      false },

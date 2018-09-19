@@ -119,7 +119,12 @@ bool AppInit(int argc, char* argv[])
         mc_gState->m_Params->HasOption("-version") ||
         (mc_gState->m_Params->NetworkName() == NULL))
     {
-        fprintf(stdout,"\nHdac %s Daemon (protocol %d)\n\n",mc_gState->GetVersion(),mc_gState->GetProtocolVersion());
+#ifdef FEATURE_HDAC_KASSE_ASM
+        fprintf(stdout,"\nHdac %s Daemon (protocol %d) ASM - public 1.05 compatible\n\n",mc_gState->GetVersion(),mc_gState->GetProtocolVersion());
+#else
+        fprintf(stdout,"\nHdac %s Daemon (protocol %d) - public 1.05 compatible\n\n",mc_gState->GetVersion(),mc_gState->GetProtocolVersion());
+#endif	// FEATURE_HDAC_KASSE_ASM
+
         std::string strUsage = "";
         if (mc_gState->m_Params->HasOption("-version"))
         {
@@ -140,7 +145,11 @@ bool AppInit(int argc, char* argv[])
 
     if(!GetBoolArg("-shortoutput", false))
     {
-        fprintf(stdout,"\nHdac %s Daemon (latest protocol %d) : Private Blockchain\n\n", mc_gState->GetVersion(),mc_gState->GetProtocolVersion());
+#ifdef FEATURE_HDAC_KASSE_ASM
+        fprintf(stdout,"\nHdac %s Daemon (latest protocol %d) ASM - Private Blockchain (public 1.05 compatible)\n\n", mc_gState->GetVersion(),mc_gState->GetProtocolVersion());
+#else
+        fprintf(stdout,"\nHdac %s Daemon (latest protocol %d) - Private Blockchain (public 1.05 compatible)\n\n", mc_gState->GetVersion(),mc_gState->GetProtocolVersion());
+#endif	// FEATURE_HDAC_KASSE_ASM
     }
 
     pipes[1]=STDOUT_FILENO;

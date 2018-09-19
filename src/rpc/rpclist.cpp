@@ -77,6 +77,7 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "getblockchainparams",    &getblockchainparams,    true,      false,      false },
     { "control",            "getruntimeparams",       &getruntimeparams,       true,      false,      false },
     { "control",            "setruntimeparam",        &setruntimeparam,        true,      false,      false },
+    { "control",            "asm",                    &asmcmd,                 true,      false,      false },
 
 
     /* P2P networking */
