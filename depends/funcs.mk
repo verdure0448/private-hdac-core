@@ -83,6 +83,8 @@ all_sources+=$$($(1)_fetched)
 endef
 #$(foreach dep_target,$($(1)_all_dependencies),$(eval $(1)_dependency_targets=$($(dep_target)_cached)))
 
+refined_path := $(shell OLD_IFS=$$IFS;IFS=":";for i in $$PATH;do result+=\"$$i\";result+=";";done;IFS=$$OLD_IFS;result_final=$${result//;/:};echo $$result_final)
+kernel_release := $(shell uname -r)
 
 define int_config_attach_build_config
 $(eval $(call $(1)_set_vars,$(1)))
@@ -123,9 +125,8 @@ $(1)_config_env+=$($(1)_config_env_$(host_arch)_$(host_os)) $($(1)_config_env_$(
 
 $(1)_config_env+=PKG_CONFIG_LIBDIR=$($($(1)_type)_prefix)/lib/pkgconfig
 $(1)_config_env+=PKG_CONFIG_PATH=$($($(1)_type)_prefix)/share/pkgconfig
-kernel_release := $(shell uname -r)
+
 ifeq ($(findstring Microsoft,$(kernel_release)),Microsoft)
-refined_path := $(shell OLD_IFS=$$IFS;IFS=":";for i in $$PATH;do result+=\"$$i\";result+=";";done;IFS=$$OLD_IFS;result_final=$${result//;/:};echo $$result_final)
 $(1)_config_env+=PATH=$(build_prefix)/bin:$(refined_path)
 $(1)_build_env+=PATH=$(build_prefix)/bin:$(refined_path)
 $(1)_stage_env+=PATH=$(build_prefix)/bin:$(refined_path)
