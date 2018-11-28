@@ -12,6 +12,6 @@ then
 fi
 #echo opt=$debug_opt
 #exit 0
-./configure --prefix=`pwd`/depends/x86_64-unknown-linux-gnu --enable-cxx --enable-shared --enable-static --with-pic $debug_opt
+ZMQ_CFLAGS=-I/usr/include ZMQ_LIBS=-lzmq ./configure --prefix=`pwd`/depends/x86_64-unknown-linux-gnu --enable-cxx --enable-shared --enable-static --with-pic $debug_opt
 make -j $core
 
