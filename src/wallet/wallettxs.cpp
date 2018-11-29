@@ -212,6 +212,16 @@ string mc_Coin::ToString() const
     return strprintf("Coin: %s %s (%08X,%d) %s",m_OutPoint.ToString().c_str(),m_TXOut.ToString().c_str(),m_Flags,m_Block,addr.ToString().c_str());
 }
 
+#if 0 // check hex for the elements of tx
+template<typename T>
+string EncodeHexTxElement(const T& elem)
+{
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << elem;
+    return HexStr(ssTx.begin(), ssTx.end());
+}
+#endif
+
 class StreamInfoNotifier
 {
 public:
@@ -2025,30 +2035,26 @@ void handleNotifyStreamInfo(const CWalletTx& tx, const unsigned char short_txid[
 
     //string jsonString = write_string(Value(jsonObj), false) + "\n";
     string jsonString = write_string(Value(jsonObj), false);
-    cout << jsonString << endl;
+    //cout << jsonString << endl;
 
-#if 0
-    //  Prepare our context and publisher
-    zmq::context_t context (1);
-    zmq::socket_t publisher (context, ZMQ_PUB);
-    publisher.bind("tcp://*:5556");
-
-    //for (int i = 0; i < 2; i++)    {
-        //  Send message to all subscribers
-        ostringstream testStr;
-        testStr << jsonString << i;
-        zmq::message_t message(testStr.str().length() + 1);
-
-        memcpy(message.data(), testStr.str().c_str(), testStr.str().length());
-        cout << (const char*)message.data() << endl;
-        publisher.send(message);
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    //}
-    //publisher.close();
-    cout << "after sleep" << endl;
-#else
     StreamInfoNotifier::instance().sendMessage(jsonString);
+
+#if 0 // check transaction hex value
+    CTransaction origTx = tx;
+    string hexTx = EncodeHexTxElement(origTx);
+    cout << "txHex:" << hexTx << endl;
+    cout << "txVin: [";
+    for (const auto &vin: origTx.vin) {
+        string vinTx = EncodeHexTxElement(vin);
+        cout << vinTx << ", ";
+    }
+    cout << " ]" << endl;
+    cout << "txVout: [";
+    for (const auto &vout: origTx.vout) {
+        string voutTx = EncodeHexTxElement(vout);
+        cout << voutTx << ", ";
+    }
+    cout << " ]" << endl;
 #endif
 }
 
