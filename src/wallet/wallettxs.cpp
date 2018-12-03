@@ -2349,14 +2349,15 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                                             {
                                                 goto exitlbl;
                                             }
-
-                                            publisherAddr = toStrWithBitcoinAddr(subkey_hash160, is_redeem_script);
+                                            if (fStreamNotify) {
+                                                publisherAddr = toStrWithBitcoinAddr(subkey_hash160, is_redeem_script);
+                                            }
                                         }
                                     }
                                 }        
                             }
 
-                            if (block < 0 /* && fNotiOption == true */) {
+                            if (fStreamNotify == true && block < 0) {
 
                                 // write json
                                 Object jsonObj;
