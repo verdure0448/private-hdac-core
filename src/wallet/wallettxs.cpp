@@ -23,7 +23,7 @@ using namespace json_spirit;
 #include <boost/algorithm/string/replace.hpp>
 #include "json/json_spirit_writer_template.h"
 
-#include <zmq.hpp>
+#include "streaminfonotifier.h"
 
 #define MC_TDB_UTXO_SET_WINDOW_SIZE        20
 
@@ -212,57 +212,7 @@ string mc_Coin::ToString() const
     return strprintf("Coin: %s %s (%08X,%d) %s",m_OutPoint.ToString().c_str(),m_TXOut.ToString().c_str(),m_Flags,m_Block,addr.ToString().c_str());
 }
 
-#if 0 // check hex for the elements of tx
-template<typename T>
-string EncodeHexTxElement(const T& elem)
-{
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    ssTx << elem;
-    return HexStr(ssTx.begin(), ssTx.end());
-}
-#endif
 
-class StreamInfoNotifier
-{
-public:
-    static StreamInfoNotifier& instance() {
-        static StreamInfoNotifier inst;
-        return inst;
-    }
-
-    void sendMessage(std::string &msg);
-
-private:
-    StreamInfoNotifier();
-
-    zmq::context_t _context;
-    zmq::socket_t _publisher;
-    int _port;
-};
-
-StreamInfoNotifier::StreamInfoNotifier() :
-    _context(1),
-    _publisher(_context, ZMQ_PUB),
-    _port(5556)
-{
-    ostringstream url;
-    url << "tcp://*:" << _port;
-    _publisher.bind(url.str());
-
-    // after binding, the delay for sending message is necessary.
-}
-
-void StreamInfoNotifier::sendMessage(string &msg)
-{
-    //zmq::socket_t publisher (_context, ZMQ_PUB);
-    //publisher.bind("tcp://*:5556");
-    std::ostringstream oStr;
-    oStr << "stream " << msg;
-    string finalMsg = oStr.str();
-    zmq::message_t message(finalMsg.begin(), finalMsg.end());
-
-    _publisher.send(message);
-}
 
 void mc_WalletTxs::Zero()
 {
@@ -1924,140 +1874,6 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CTransaction& tx,int block,CDi
     return AddTx(import,wtx,block,block_pos,block_tx_index,block_hash);
 }
 
-void extractStreamData(const CWalletTx& wtx, const unsigned char *stream_id, Object &jsonObj)
-{
-    int streamOutput = -1;
-    std::unique_ptr<mc_Script> script(new mc_Script);
-    for (int j = 0; j < (int)wtx.vout.size(); ++j)    {
-        const CScript& script1 = wtx.vout[j].scriptPubKey;
-        CScript::const_iterator pc1 = script1.begin();
-
-        script->Clear();
-        script->SetScript((unsigned char*)(&pc1[0]),(size_t)(script1.end()-pc1),MC_SCR_TYPE_SCRIPTPUBKEY);
-
-        if(script->IsOpReturnScript())  {
-            if(script->GetNumElements()) // 2 OP_DROPs + OP_RETURN - item key
-            {
-                unsigned char short_txid[MC_AST_SHORT_TXID_SIZE];
-                script->SetElement(0);
-                if(script->GetEntity(short_txid) == 0) {
-                    if(memcmp(short_txid,stream_id,MC_AST_SHORT_TXID_SIZE) == 0)    {
-                        streamOutput=j;
-                        mc_gState->m_TmpScript->SetElement(1);
-                        unsigned char item_key[MC_ENT_MAX_ITEM_KEY_SIZE+1];
-                        int item_key_size;
-                        // Should be spkk
-                        if(mc_gState->m_TmpScript->GetItemKey(item_key,&item_key_size))   // Item key
-                        {
-                            return;
-                        }
-                        item_key[item_key_size]=0;
-                        jsonObj.push_back(Pair("key", string(reinterpret_cast<const char*>(item_key))));
-                        //cout << "key: " << item_key << endl;
-
-                        size_t elem_size;
-                        const unsigned char *elem;
-
-                        elem = script->GetData(2,&elem_size);
-
-                        string metadata=HexStr(elem,elem+elem_size);
-                        jsonObj.push_back(Pair("data", metadata));
-                        //cout << "data: " << metadata << endl;
-                    }
-                }
-            }
-        }
-    }
-    //assert(streamOutput >= 0);
-    //cout << "streamOutput: " << streamOutput << endl;
-    if (streamOutput < 0)   {
-        return;
-    }
-
-    set<uint160> publishers_set;
-    const unsigned char *ptr;
-    //Array publishers;
-    publishers_set.clear();
-    for (int i = 0; i < (int)wtx.vin.size(); ++i)
-    {
-        int op_addr_offset,op_addr_size,is_redeem_script,sighash_type;
-
-        const CScript& script2 = wtx.vin[i].scriptSig;
-        CScript::const_iterator pc2 = script2.begin();
-
-        ptr=mc_ExtractAddressFromInputScript((unsigned char*)(&pc2[0]),(int)(script2.end()-pc2),&op_addr_offset,&op_addr_size,&is_redeem_script,&sighash_type,0);
-        if(ptr)
-        {
-            if( (sighash_type == SIGHASH_ALL) || ( (sighash_type == SIGHASH_SINGLE) && (i == streamOutput) ) )
-            {
-                uint160 publisher_hash=Hash160(ptr+op_addr_offset,ptr+op_addr_offset+op_addr_size);
-                if(publishers_set.count(publisher_hash) == 0)
-                {
-                    publishers_set.insert(publisher_hash);
-                    if(is_redeem_script)
-                    {
-                        //publishers.push_back(CBitcoinAddress((CScriptID)publisher_hash).ToString());
-                        //cout << "publisher(ScriptID): " << CBitcoinAddress((CScriptID)publisher_hash).ToString() << endl;
-                        jsonObj.push_back(Pair("publisher", CBitcoinAddress((CScriptID)publisher_hash).ToString()));
-                    }
-                    else
-                    {
-                        //publishers.push_back(CBitcoinAddress((CKeyID)publisher_hash).ToString());
-                        //cout << "publisher(KeyID): " << CBitcoinAddress((CKeyID)publisher_hash).ToString() << endl;
-                        jsonObj.push_back(Pair("publisher", CBitcoinAddress((CKeyID)publisher_hash).ToString()));
-                    }
-                }
-            }
-        }
-    }
-
-    //int block=wtx.txDef.m_Block;
-    //cout << "blocktime: " << chainActive[block]->GetBlockTime() << endl; // after block generated
-    uint256 hash = wtx.GetHash();
-    //cout << "txid:" << hash.GetHex() << endl;
-    jsonObj.push_back(Pair("txid", hash.GetHex()));
-    //cout << "timereceived: " << (int64_t)wtx.txDef.m_TimeReceived << endl; // timereceived
-}
-
-
-
-void handleNotifyStreamInfo(const CWalletTx& tx, const unsigned char short_txid[MC_AST_SHORT_TXID_SIZE])
-{
-    // write json
-    Object jsonObj;
-
-    // from AcceptMemPool
-    mc_EntityDetails detailEntity;
-    mc_gState->m_Assets->FindEntityByShortTxID(&detailEntity, short_txid);
-    //cout << "stream: " << detailEntity.GetName() << endl;
-    jsonObj.push_back(Pair("name", detailEntity.GetName()));
-    extractStreamData(tx, short_txid, jsonObj);
-
-    //string jsonString = write_string(Value(jsonObj), false) + "\n";
-    string jsonString = write_string(Value(jsonObj), false);
-    //cout << jsonString << endl;
-
-    StreamInfoNotifier::instance().sendMessage(jsonString);
-
-#if 0 // check transaction hex value
-    CTransaction origTx = tx;
-    string hexTx = EncodeHexTxElement(origTx);
-    cout << "txHex:" << hexTx << endl;
-    cout << "txVin: [";
-    for (const auto &vin: origTx.vin) {
-        string vinTx = EncodeHexTxElement(vin);
-        cout << vinTx << ", ";
-    }
-    cout << " ]" << endl;
-    cout << "txVout: [";
-    for (const auto &vout: origTx.vout) {
-        string voutTx = EncodeHexTxElement(vout);
-        cout << voutTx << ", ";
-    }
-    cout << " ]" << endl;
-#endif
-}
-
 int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskTxPos* block_pos,uint32_t block_tx_index,uint256 block_hash)
 {
     int err,i,j,entcount,lockres,entpos;
@@ -2441,10 +2257,6 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                     entity.m_EntityType=MC_TET_STREAM | MC_TET_CHAINPOS;
                     if(imp->FindEntity(&entity) >= 0)    
                     {
-                        if (block < 0 /* && fNotiOption == true */) {
-                            handleNotifyStreamInfo(tx, short_txid);
-                        }
-
                         if(imp->m_TmpEntities->Seek(&entity) < 0)
                         {
                             imp->m_TmpEntities->Add(&entity,NULL);
@@ -2486,6 +2298,7 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                             }                           
 
                             publishers_set.clear();
+                            string publisherAddr;
                             for (j = 0; j < (int)tx.vin.size(); ++j)
                             {
                                 int op_addr_offset,op_addr_size,is_redeem_script,sighash_type;
@@ -2535,12 +2348,30 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                                             if(err)
                                             {
                                                 goto exitlbl;
-                                            }                                                                       
+                                            }
+
+                                            publisherAddr = toStrWithBitcoinAddr(subkey_hash160, is_redeem_script);
                                         }
                                     }
                                 }        
-                            }                            
-                        }                            
+                            }
+
+                            if (block < 0 /* && fNotiOption == true */) {
+
+                                // write json
+                                Object jsonObj;
+
+                                jsonObj.push_back(Pair("name", findStreamName(*mc_gState->m_Assets, short_txid)));
+                                jsonObj.push_back(Pair("key", string((const char*)item_key, item_key_size)));
+                                jsonObj.push_back(Pair("data", findStreamItemData(*mc_gState->m_TmpScript)));
+                                jsonObj.push_back(Pair("publisher", publisherAddr));
+                                jsonObj.push_back(Pair("txid", tx.GetHash().GetHex()));
+
+                                string jsonString = write_string(Value(jsonObj), false);
+
+                                StreamInfoNotifier::instance().sendMessage(jsonString);
+                            }
+                        }
                     }                    
                 }
             }     

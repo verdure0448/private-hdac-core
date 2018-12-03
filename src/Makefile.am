@@ -246,6 +246,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallettxs.cpp \
   wallet/wallet_ismine.cpp \
   wallet/walletdb.cpp \
+  wallet/streaminfonotifier.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
