@@ -9,7 +9,7 @@ using namespace std;
 StreamInfoNotifier::StreamInfoNotifier() :
     _context(1),
     _publisher(_context, ZMQ_PUB),
-    _port(5556)
+    _port(-1)
 {
     ostringstream url;
     url << "tcp://*:" << _port;
@@ -28,6 +28,20 @@ void StreamInfoNotifier::sendMessage(string &msg)
     zmq::message_t message(finalMsg.begin(), finalMsg.end());
 
     _publisher.send(message);
+}
+
+void StreamInfoNotifier::bind(int port)
+{
+    ostringstream url;
+    const string baseUrl("tcp://*:");
+    if (_port > 0) {
+        url << baseUrl << _port;
+        _publisher.unbind(url.str());
+    }
+    _port = port;
+    url.str("");
+    url << baseUrl << _port;
+    _publisher.bind(url.str());
 }
 
 string findStreamItemData(mc_Script& parser)

@@ -390,6 +390,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -zapwallettxes=<mode>  " + _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") + "\n";
     strUsage += "                         " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)") + "\n";
     strUsage += "  -streamnotify          " + _("Enable stream-notification(should subscribe the stream") + "\n";
+    strUsage += "  -notifyport=<port>     " + strprintf(_("Specify the port for stream-notification (default: %u)"), DEFAULT_NOTIFY_PORT) + "\n";
 
 #ifdef FEATURE_HPAY_IMPORT_ALL_ADDR_WITH_TX
     strUsage += "  -importtxaddrs         " +strprintf(_("Automatically import addresses with transactions. used together with txindex (reindex for old tx)  (default: %d)"), 0) + "\n";

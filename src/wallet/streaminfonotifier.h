@@ -13,6 +13,7 @@ public:
     }
 
     void sendMessage(std::string &msg);
+    void bind(int port);
 
 private:
     StreamInfoNotifier();

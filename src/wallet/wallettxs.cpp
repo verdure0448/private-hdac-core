@@ -24,6 +24,7 @@ using namespace json_spirit;
 #include "json/json_spirit_writer_template.h"
 
 #include "streaminfonotifier.h"
+#include "utils/util.h"
 
 #define MC_TDB_UTXO_SET_WINDOW_SIZE        20
 
@@ -225,7 +226,9 @@ void mc_WalletTxs::Zero()
     }
     m_Mode=MC_WMD_NONE;
 
-    StreamInfoNotifier::instance();
+    if (fStreamNotify)  {
+        StreamInfoNotifier::instance().bind(GetArg("-notifyport", DEFAULT_NOTIFY_PORT));
+    }
 }
 
 void mc_WalletTxs::BindWallet(CWallet *lpWallet)
