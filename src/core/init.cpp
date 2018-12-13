@@ -1511,6 +1511,7 @@ bool AppInit2(boost::thread_group& threadGroup,int OutputPipe)
             zap_wallet_txs=true;
         }
 
+        fStreamNotify = GetBoolArg("-streamnotify", false);
         pwalletTxsMain=new mc_WalletTxs;
         mc_TxEntity entity;
         boost::filesystem::path pathWallet=GetDataDir() / "wallet";
@@ -1864,8 +1865,6 @@ bool AppInit2(boost::thread_group& threadGroup,int OutputPipe)
         uiInterface.InitMessage.connect(SetRPCWarmupStatus);
         StartRPCThreads();
     }
-
-    fStreamNotify = GetBoolArg("-streamnotify", false);
 
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization
