@@ -22,7 +22,6 @@ using namespace json_spirit;
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include "json/json_spirit_writer_template.h"
-
 #include "streaminfonotifier.h"
 #include "utils/util.h"
 
@@ -225,10 +224,6 @@ void mc_WalletTxs::Zero()
         m_UTXOs[i].clear();
     }
     m_Mode=MC_WMD_NONE;
-
-    if (fStreamNotify)  {
-        StreamInfoNotifier::instance().bind(GetArg("-notifyport", DEFAULT_NOTIFY_PORT));
-    }
 }
 
 void mc_WalletTxs::BindWallet(CWallet *lpWallet)

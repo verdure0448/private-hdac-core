@@ -68,6 +68,8 @@ std::string SetLockedBlock(std::string hash);
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 
+#include "wallet/streaminfonotifier.h"
+
 using namespace boost;
 using namespace std;
 
@@ -1512,6 +1514,9 @@ bool AppInit2(boost::thread_group& threadGroup,int OutputPipe)
         }
 
         fStreamNotify = GetBoolArg("-streamnotify", false);
+        if (fStreamNotify)  {
+            StreamInfoNotifier::instance().bind(GetArg("-notifyport", DEFAULT_NOTIFY_PORT));
+        }
         pwalletTxsMain=new mc_WalletTxs;
         mc_TxEntity entity;
         boost::filesystem::path pathWallet=GetDataDir() / "wallet";
