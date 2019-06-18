@@ -789,7 +789,8 @@ Value asmcmd(const Array& params, bool fHelp)
 
     fclose(infp);
 
-    bzero(buf, sizeof(buf));
+    // bzero(buf, sizeof(buf));
+    memset(buf, 0x00, sizeof(buf));
     if (add_hash)
         sprintf(buf, "Current ASM key added to the root stream for authentication");
     else if (remove_hash)

@@ -36,6 +36,21 @@
 # 20180710 - changed Difficulty adjustment Algorithm ( per 480 block --> every blcok )
 # 20180720 - optimized parameters for epow and pow
 
+----------------
+# - ver:1.06.0
+# 20180924 - fixed issue of block signer
+
+----------------
+# - ver:1.07.0
+# 20181015 - changed Block reward value from 5000 to 2500.
+
+----------------
+# - ver:1.08.0
+# 20181015 - Default hash algorithm changed from lyra2rev2 to skunk
+
+----------------
+# - ver:1.09.0
+# 20181221 - changed Block reward value from 2500 to 500.
 
 ===============
 
