@@ -145,3 +145,15 @@ src/secp256k1/build-aux/depcomp
 /*.user
 
 src/protocol/\.deps/
+
+private-hdac-core.cflags
+
+private-hdac-core.config
+
+private-hdac-core.creator
+
+private-hdac-core.cxxflags
+
+private-hdac-core.files
+
+private-hdac-core.includes
