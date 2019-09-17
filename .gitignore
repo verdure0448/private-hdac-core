@@ -157,3 +157,19 @@ private-hdac-core.cxxflags
 private-hdac-core.files
 
 private-hdac-core.includes
+
+.build.sh.swp
+
+private-hdac-stream.cflags
+
+private-hdac-stream.config
+
+private-hdac-stream.creator
+
+private-hdac-stream.creator.user.4.8-pre1
+
+private-hdac-stream.cxxflags
+
+private-hdac-stream.files
+
+private-hdac-stream.includes
