@@ -12,7 +12,7 @@ public:
         return inst;
     }
 
-    void sendMessage(std::string &msg);
+    void sendMessage(std::string &topic, std::string &msg);
     void bind(int port);
 
 private:
