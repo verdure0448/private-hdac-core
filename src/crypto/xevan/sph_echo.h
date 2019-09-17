@@ -1,9 +1,8 @@
-/* $Id: sph_blake.h 252 2011-06-07 17:55:14Z tp $ */
+/* $Id: sph_echo.h 216 2010-06-08 09:46:57Z tp $ */
 /**
- * BLAKE interface. BLAKE is a family of functions which differ by their
- * output size; this implementation defines BLAKE for output sizes 224,
- * 256, 384 and 512 bits. This implementation conforms to the "third
- * round" specification.
+ * ECHO interface. ECHO is a family of functions which differ by
+ * their output size; this implementation defines ECHO for output
+ * sizes 224, 256, 384 and 512 bits.
  *
  * ==========================(LICENSE BEGIN)============================
  *
@@ -30,140 +29,138 @@
  *
  * ===========================(LICENSE END)=============================
  *
- * @file     sph_blake.h
+ * @file     sph_echo.h
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#ifndef SPH_BLAKE_H__
-#define SPH_BLAKE_H__
+#ifndef SPH_ECHO_H__
+#define SPH_ECHO_H__
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include <stddef.h>
-#include "crypto/xevan/sph_types.h"
+#include "sph_types.h"
 
 /**
- * Output size (in bits) for BLAKE-224.
+ * Output size (in bits) for ECHO-224.
  */
-#define SPH_SIZE_blake224   224
+#define SPH_SIZE_echo224   224
 
 /**
- * Output size (in bits) for BLAKE-256.
+ * Output size (in bits) for ECHO-256.
  */
-#define SPH_SIZE_blake256   256
-
-#if SPH_64
+#define SPH_SIZE_echo256   256
 
 /**
- * Output size (in bits) for BLAKE-384.
+ * Output size (in bits) for ECHO-384.
  */
-#define SPH_SIZE_blake384   384
+#define SPH_SIZE_echo384   384
 
 /**
- * Output size (in bits) for BLAKE-512.
+ * Output size (in bits) for ECHO-512.
  */
-#define SPH_SIZE_blake512   512
-
-#endif
+#define SPH_SIZE_echo512   512
 
 /**
- * This structure is a context for BLAKE-224 and BLAKE-256 computations:
- * it contains the intermediate values and some data from the last
- * entered block. Once a BLAKE computation has been performed, the
- * context can be reused for another computation.
+ * This structure is a context for ECHO computations: it contains the
+ * intermediate values and some data from the last entered block. Once
+ * an ECHO computation has been performed, the context can be reused for
+ * another computation. This specific structure is used for ECHO-224
+ * and ECHO-256.
  *
- * The contents of this structure are private. A running BLAKE
- * computation can be cloned by copying the context (e.g. with a simple
+ * The contents of this structure are private. A running ECHO computation
+ * can be cloned by copying the context (e.g. with a simple
  * <code>memcpy()</code>).
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
+	unsigned char buf[192];    /* first field, for alignment */
 	size_t ptr;
-	sph_u32 H[8];
-	sph_u32 S[4];
-	sph_u32 T0, T1;
-#endif
-} sph_blake_small_context;
-
-/**
- * This structure is a context for BLAKE-224 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
- */
-typedef sph_blake_small_context sph_blake224_context;
-
-/**
- * This structure is a context for BLAKE-256 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
- */
-typedef sph_blake_small_context sph_blake256_context;
-
+	union {
+		sph_u32 Vs[4][4];
 #if SPH_64
+		sph_u64 Vb[4][2];
+#endif
+	} u;
+	sph_u32 C0, C1, C2, C3;
+#endif
+} sph_echo_small_context;
 
 /**
- * This structure is a context for BLAKE-384 and BLAKE-512 computations:
- * it contains the intermediate values and some data from the last
- * entered block. Once a BLAKE computation has been performed, the
- * context can be reused for another computation.
+ * This structure is a context for ECHO computations: it contains the
+ * intermediate values and some data from the last entered block. Once
+ * an ECHO computation has been performed, the context can be reused for
+ * another computation. This specific structure is used for ECHO-384
+ * and ECHO-512.
  *
- * The contents of this structure are private. A running BLAKE
- * computation can be cloned by copying the context (e.g. with a simple
+ * The contents of this structure are private. A running ECHO computation
+ * can be cloned by copying the context (e.g. with a simple
  * <code>memcpy()</code>).
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
 	unsigned char buf[128];    /* first field, for alignment */
 	size_t ptr;
-	sph_u64 H[8];
-	sph_u64 S[4];
-	sph_u64 T0, T1;
+	union {
+		sph_u32 Vs[8][4];
+#if SPH_64
+		sph_u64 Vb[8][2];
 #endif
-} sph_blake_big_context;
-
-/**
- * This structure is a context for BLAKE-384 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
- */
-typedef sph_blake_big_context sph_blake384_context;
-
-/**
- * This structure is a context for BLAKE-512 computations. It is
- * identical to the common <code>sph_blake_small_context</code>.
- */
-typedef sph_blake_big_context sph_blake512_context;
-
+	} u;
+	sph_u32 C0, C1, C2, C3;
 #endif
+} sph_echo_big_context;
 
 /**
- * Initialize a BLAKE-224 context. This process performs no memory allocation.
+ * Type for a ECHO-224 context (identical to the common "small" context).
+ */
+typedef sph_echo_small_context sph_echo224_context;
+
+/**
+ * Type for a ECHO-256 context (identical to the common "small" context).
+ */
+typedef sph_echo_small_context sph_echo256_context;
+
+/**
+ * Type for a ECHO-384 context (identical to the common "big" context).
+ */
+typedef sph_echo_big_context sph_echo384_context;
+
+/**
+ * Type for a ECHO-512 context (identical to the common "big" context).
+ */
+typedef sph_echo_big_context sph_echo512_context;
+
+/**
+ * Initialize an ECHO-224 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-224 context (pointer to a
- *             <code>sph_blake224_context</code>)
+ * @param cc   the ECHO-224 context (pointer to a
+ *             <code>sph_echo224_context</code>)
  */
-void sph_blake224_init(void *cc);
+void sph_echo224_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-224 context
+ * @param cc     the ECHO-224 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake224(void *cc, const void *data, size_t len);
+void sph_echo224(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-224 computation and output the result into
+ * Terminate the current ECHO-224 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (28 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-224 context
+ * @param cc    the ECHO-224 context
  * @param dst   the destination buffer
  */
-void sph_blake224_close(void *cc, void *dst);
+void sph_echo224_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -173,42 +170,42 @@ void sph_blake224_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-224 context
+ * @param cc    the ECHO-224 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake224_addbits_and_close(
+void sph_echo224_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a BLAKE-256 context. This process performs no memory allocation.
+ * Initialize an ECHO-256 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-256 context (pointer to a
- *             <code>sph_blake256_context</code>)
+ * @param cc   the ECHO-256 context (pointer to a
+ *             <code>sph_echo256_context</code>)
  */
-void sph_blake256_init(void *cc);
+void sph_echo256_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-256 context
+ * @param cc     the ECHO-256 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake256(void *cc, const void *data, size_t len);
+void sph_echo256(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-256 computation and output the result into
+ * Terminate the current ECHO-256 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (32 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-256 context
+ * @param cc    the ECHO-256 context
  * @param dst   the destination buffer
  */
-void sph_blake256_close(void *cc, void *dst);
+void sph_echo256_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -218,44 +215,42 @@ void sph_blake256_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-256 context
+ * @param cc    the ECHO-256 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake256_addbits_and_close(
+void sph_echo256_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
-#if SPH_64
-
 /**
- * Initialize a BLAKE-384 context. This process performs no memory allocation.
+ * Initialize an ECHO-384 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-384 context (pointer to a
- *             <code>sph_blake384_context</code>)
+ * @param cc   the ECHO-384 context (pointer to a
+ *             <code>sph_echo384_context</code>)
  */
-void sph_blake384_init(void *cc);
+void sph_echo384_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-384 context
+ * @param cc     the ECHO-384 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake384(void *cc, const void *data, size_t len);
+void sph_echo384(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-384 computation and output the result into
+ * Terminate the current ECHO-384 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (48 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-384 context
+ * @param cc    the ECHO-384 context
  * @param dst   the destination buffer
  */
-void sph_blake384_close(void *cc, void *dst);
+void sph_echo384_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -265,42 +260,42 @@ void sph_blake384_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-384 context
+ * @param cc    the ECHO-384 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake384_addbits_and_close(
+void sph_echo384_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
- * Initialize a BLAKE-512 context. This process performs no memory allocation.
+ * Initialize an ECHO-512 context. This process performs no memory allocation.
  *
- * @param cc   the BLAKE-512 context (pointer to a
- *             <code>sph_blake512_context</code>)
+ * @param cc   the ECHO-512 context (pointer to a
+ *             <code>sph_echo512_context</code>)
  */
-void sph_blake512_init(void *cc);
+void sph_echo512_init(void *cc);
 
 /**
  * Process some data bytes. It is acceptable that <code>len</code> is zero
  * (in which case this function does nothing).
  *
- * @param cc     the BLAKE-512 context
+ * @param cc     the ECHO-512 context
  * @param data   the input data
  * @param len    the input data length (in bytes)
  */
-void sph_blake512(void *cc, const void *data, size_t len);
+void sph_echo512(void *cc, const void *data, size_t len);
 
 /**
- * Terminate the current BLAKE-512 computation and output the result into
+ * Terminate the current ECHO-512 computation and output the result into
  * the provided buffer. The destination buffer must be wide enough to
  * accomodate the result (64 bytes). The context is automatically
  * reinitialized.
  *
- * @param cc    the BLAKE-512 context
+ * @param cc    the ECHO-512 context
  * @param dst   the destination buffer
  */
-void sph_blake512_close(void *cc, void *dst);
+void sph_echo512_close(void *cc, void *dst);
 
 /**
  * Add a few additional bits (0 to 7) to the current computation, then
@@ -310,16 +305,14 @@ void sph_blake512_close(void *cc, void *dst);
  * numbered 7 downto 8-n (this is the big-endian convention at the byte
  * level). The context is automatically reinitialized.
  *
- * @param cc    the BLAKE-512 context
+ * @param cc    the ECHO-512 context
  * @param ub    the extra bits
  * @param n     the number of extra bits (0 to 7)
  * @param dst   the destination buffer
  */
-void sph_blake512_addbits_and_close(
+void sph_echo512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
-
-#endif
-
+	
 #ifdef __cplusplus
 }
 #endif

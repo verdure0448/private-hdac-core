@@ -2,6 +2,37 @@
 PRIVATE BLOCKCHAIN HISTORY
 
 
+hdac-1.09: 18.11.29
+
+	MOTP POC 적용 테스트 완료
+
+hdac-1.08: 18.10.22
+
+	Public Hdac 1.08.00 compatible
+	Hdac hard fork: Change hash algorithm to skunk.
+
+hdac-1.07: 18.10.18
+
+	Public Hdac 1.07.00 compatible
+	Hdac hard fork: Reduce mining reward to 1/2.
+
+hdac-1.05: 18.10.16
+
+	fDebug 값이 원래는 0/1이지만 0~N 값을 가지도록 변경함 
+
+hdac-1.04: 18.10.15
+
+	-debug=bench 와 같이 옵션 추가로 주는 경우 해당 디버깅만 되지 않는 오류 수정
+	if(fDebug>0)LogPrint(...) => LogPrint(...)
+
+hdac-1.03: 18.8.21
+
+	Hdac public hard fork 관련 코드 반영
+
+hdac-1.02: 18.8.28
+	
+	고속 tx 발생시 order 변경 때문에 tx 처리 거부되는 문제 해결 (core/main.cpp: PrioritizeTransaction())
+
 hdac-1.01: 18.8.21
 
 	Wallet memory leck update

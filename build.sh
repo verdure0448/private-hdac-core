@@ -13,3 +13,4 @@ fi
 ./configure --prefix=`pwd`/depends/x86_64-unknown-linux-gnu --enable-cxx --enable-shared --enable-static --with-pic $debug_opt
 make -j $core
 
+

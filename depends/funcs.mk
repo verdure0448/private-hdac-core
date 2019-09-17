@@ -83,10 +83,6 @@ all_sources+=$$($(1)_fetched)
 endef
 #$(foreach dep_target,$($(1)_all_dependencies),$(eval $(1)_dependency_targets=$($(dep_target)_cached)))
 
-kernel_release := $(shell uname -r)
-ifeq ($(findstring Microsoft,$(kernel_release)),Microsoft)
-	PATH:=$(shell echo "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
-endif
 
 define int_config_attach_build_config
 $(eval $(call $(1)_set_vars,$(1)))

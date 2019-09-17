@@ -42,7 +42,7 @@ extern "C"{
 #endif
 
 #include <stddef.h>
-#include "crypto/xevan/sph_types.h"
+#include "sph_types.h"
 
 /**
  * Output size (in bits) for BLAKE-224.
