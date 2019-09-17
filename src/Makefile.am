@@ -18,7 +18,7 @@ $(LIBLEVELDB) $(LIBMEMENV):
 endif
 
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS) $(ZMQ_CFLAGS)
 
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 
@@ -246,6 +246,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallettxs.cpp \
   wallet/wallet_ismine.cpp \
   wallet/walletdb.cpp \
+  wallet/streaminfonotifier.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -370,7 +371,7 @@ if TARGET_WINDOWS
 hdacd_SOURCES += hdacd-res.rc
 endif
 
-hdacd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+hdacd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(ZMQ_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 hdacd_CPPFLAGS = $(BITCOIN_INCLUDES)
 hdacd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -394,7 +395,7 @@ if TARGET_WINDOWS
 hdacd_cold_SOURCES += hdacd-cold-res.rc
 endif
 
-hdacd_cold_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+hdacd_cold_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(ZMQ_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 hdacd_cold_CPPFLAGS = $(BITCOIN_INCLUDES)
 hdacd_cold_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 

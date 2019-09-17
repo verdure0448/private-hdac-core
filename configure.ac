@@ -799,6 +799,8 @@ else
   fi
 fi
 
+PKG_CHECK_MODULES([ZMQ], [libzmq >= 4.2])
+
 dnl these are only used when qt is enabled
 if test x$bitcoin_enable_qt != xno; then
   BUILD_QT=qt

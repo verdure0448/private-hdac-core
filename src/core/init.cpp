@@ -68,6 +68,8 @@ std::string SetLockedBlock(std::string hash);
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 
+#include "wallet/streaminfonotifier.h"
+
 using namespace boost;
 using namespace std;
 
@@ -389,6 +391,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += "  -zapwallettxes=<mode>  " + _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") + "\n";
     strUsage += "                         " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)") + "\n";
+    strUsage += "  -streamnotify          " + _("Enable stream-notification(should subscribe the stream") + "\n";
+    strUsage += "  -notifyport=<port>     " + strprintf(_("Specify the port for stream-notification (default: %u)"), DEFAULT_NOTIFY_PORT) + "\n";
 
 #ifdef FEATURE_HPAY_IMPORT_ALL_ADDR_WITH_TX
     strUsage += "  -importtxaddrs         " +strprintf(_("Automatically import addresses with transactions. used together with txindex (reindex for old tx)  (default: %d)"), 0) + "\n";
@@ -1509,6 +1513,10 @@ bool AppInit2(boost::thread_group& threadGroup,int OutputPipe)
             zap_wallet_txs=true;
         }
 
+        fStreamNotify = GetBoolArg("-streamnotify", false);
+        if (fStreamNotify)  {
+            StreamInfoNotifier::instance().bind(GetArg("-notifyport", DEFAULT_NOTIFY_PORT));
+        }
         pwalletTxsMain=new mc_WalletTxs;
         mc_TxEntity entity;
         boost::filesystem::path pathWallet=GetDataDir() / "wallet";
@@ -1862,8 +1870,6 @@ bool AppInit2(boost::thread_group& threadGroup,int OutputPipe)
         uiInterface.InitMessage.connect(SetRPCWarmupStatus);
         StartRPCThreads();
     }
-
-
 
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization

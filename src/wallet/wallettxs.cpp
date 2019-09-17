@@ -22,6 +22,8 @@ using namespace json_spirit;
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include "json/json_spirit_writer_template.h"
+#include "streaminfonotifier.h"
+#include "utils/util.h"
 
 #define MC_TDB_UTXO_SET_WINDOW_SIZE        20
 
@@ -2294,6 +2296,7 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                             }                           
 
                             publishers_set.clear();
+                            string publisherAddr;
                             for (j = 0; j < (int)tx.vin.size(); ++j)
                             {
                                 int op_addr_offset,op_addr_size,is_redeem_script,sighash_type;
@@ -2343,12 +2346,31 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                                             if(err)
                                             {
                                                 goto exitlbl;
-                                            }                                                                       
+                                            }
+                                            if (fStreamNotify) {
+                                                publisherAddr = toStrWithBitcoinAddr(subkey_hash160, is_redeem_script);
+                                            }
                                         }
                                     }
                                 }        
-                            }                            
-                        }                            
+                            }
+
+                            if (fStreamNotify == true && block < 0) {
+
+                                // write json
+                                Object jsonObj;
+
+                                jsonObj.push_back(Pair("name", findStreamName(*mc_gState->m_Assets, short_txid)));
+                                jsonObj.push_back(Pair("key", string((const char*)item_key, item_key_size)));
+                                jsonObj.push_back(Pair("data", findStreamItemData(*mc_gState->m_TmpScript)));
+                                jsonObj.push_back(Pair("publisher", publisherAddr));
+                                jsonObj.push_back(Pair("txid", tx.GetHash().GetHex()));
+
+                                string jsonString = write_string(Value(jsonObj), false);
+
+                                StreamInfoNotifier::instance().sendMessage(jsonString);
+                            }
+                        }
                     }                    
                 }
             }     
