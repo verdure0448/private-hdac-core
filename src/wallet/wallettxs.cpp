@@ -2360,7 +2360,9 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
                                 // write json
                                 Object jsonObj;
 
-                                jsonObj.push_back(Pair("name", findStreamName(*mc_gState->m_Assets, short_txid)));
+                                string streamName = findStreamName(*mc_gState->m_Assets, short_txid);
+
+                                jsonObj.push_back(Pair("name", streamName));
                                 jsonObj.push_back(Pair("key", string((const char*)item_key, item_key_size)));
                                 jsonObj.push_back(Pair("data", findStreamItemData(*mc_gState->m_TmpScript)));
                                 jsonObj.push_back(Pair("publisher", publisherAddr));
@@ -2368,7 +2370,7 @@ int mc_WalletTxs::AddTx(mc_TxImport *import,const CWalletTx& tx,int block,CDiskT
 
                                 string jsonString = write_string(Value(jsonObj), false);
 
-                                StreamInfoNotifier::instance().sendMessage(jsonString);
+                                StreamInfoNotifier::instance().sendMessage(streamName, jsonString);
                             }
                         }
                     }                    
