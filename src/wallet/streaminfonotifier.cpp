@@ -18,7 +18,7 @@ StreamInfoNotifier::StreamInfoNotifier() :
     // after binding, the delay for sending message is necessary.
 }
 
-void StreamInfoNotifier::sendMessage(string &topic, string &msg)
+void StreamInfoNotifier::sendMessage(std::string &topic, string &msg)
 {
     //zmq::socket_t publisher (_context, ZMQ_PUB);
     //publisher.bind("tcp://*:5556");
